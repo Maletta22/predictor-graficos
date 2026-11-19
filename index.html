@@ -3,39 +3,61 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Predictor de gráficos</title>
+  <title>¿Sube o baja? · Predictor de gráficos</title>
+  <meta name="description" content="Juego educativo: adivina si un gráfico real de bolsa, FOREX o crypto sube o baja, y compárate con lanzar una moneda.">
+  <!-- Icono de la pestaña: un emoji dibujado como imagen SVG, sin archivos extra -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>">
   <link rel="stylesheet" href="styles.css">
   <!-- Librería de gráficos de TradingView, versión fija (ver CLAUDE.md) -->
   <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@5.0.9/dist/lightweight-charts.standalone.production.js"></script>
 </head>
 <body>
   <main>
-    <h1>¿Sube o baja?</h1>
-    <p class="subtitle">
-      Un gráfico real de un activo y unas fechas secretas.
-      La última vela vale 100.
-    </p>
+    <header class="top">
+      <h1>¿Sube o baja?</h1>
+      <p class="subtitle">
+        Un gráfico real, un activo y unas fechas secretas.
+        ¿Lo harás mejor que una moneda lanzada al aire?
+      </p>
+    </header>
+
+    <details class="howto">
+      <summary>Cómo se juega</summary>
+      <ol>
+        <li>Ves 60 velas diarias de un activo real (bolsa, FOREX o crypto) de un periodo al azar.</li>
+        <li>Los precios están convertidos para que la última vela valga 100: así no se reconoce el activo.</li>
+        <li>Decides si, 20 velas después, el precio estará más arriba o más abajo.</li>
+        <li>Se revela la continuación, el activo, las fechas y los precios reales.</li>
+        <li>Si la variación es menor del 0,1 %, es empate y la ronda no cuenta.</li>
+      </ol>
+      <p>
+        Los fines de semana y festivos no aparecen en el gráfico. Los cierres
+        excepcionales del mercado (como tras el 11-S) se ven como huecos.
+      </p>
+    </details>
 
     <!-- Zona de juego: gráfico a la izquierda, panel lateral a la derecha
          (en pantallas estrechas, el panel pasa debajo del gráfico) -->
     <div class="game">
       <!-- Aquí dibuja chart.js el gráfico -->
-      <div id="chart"></div>
+      <div id="chart" class="card"></div>
 
       <aside class="side">
         <!-- Paso 1: el usuario decide -->
-        <div id="choice" class="panel">
-          <p>¿Qué hará el precio en las próximas 20 velas?</p>
+        <div id="choice" class="card panel">
+          <p class="question">¿Qué hará el precio en las próximas 20 velas?</p>
           <div class="buttons">
             <button id="guess-up" class="up">▲ Sube</button>
             <button id="guess-down" class="down">▼ Baja</button>
           </div>
+          <p class="hint">Atajos: <kbd>↑</kbd> sube · <kbd>↓</kbd> baja</p>
         </div>
 
-        <!-- Paso 2: se revela el resultado (oculto hasta que el usuario responde) -->
-        <div id="result" class="panel hidden">
+        <!-- Paso 2: se revela el resultado (oculto hasta que el usuario responde).
+             aria-live hace que los lectores de pantalla lo lean al aparecer. -->
+        <div id="result" class="card panel hidden" aria-live="polite">
           <p id="result-title" class="result-title"></p>
-          <p id="result-change"></p>
+          <p id="result-change" class="result-change"></p>
           <dl>
             <dt>Activo</dt>
             <dd id="result-asset"></dd>
@@ -46,7 +68,8 @@
             <dt>Precio 20 velas después</dt>
             <dd id="result-price-end"></dd>
           </dl>
-          <button id="next-round">Siguiente gráfico</button>
+          <button id="next-round" class="primary">Siguiente gráfico</button>
+          <p class="hint">Atajo: <kbd>Enter</kbd></p>
         </div>
       </aside>
     </div>
@@ -54,14 +77,14 @@
     <p id="message" class="message"></p>
 
     <!-- Estadísticas del jugador (las rellena main.js) -->
-    <section class="panel stats">
+    <section class="card panel stats">
       <h2>Tus estadísticas</h2>
       <div class="stats-grid">
-        <div><span id="stat-played" class="stat-value"></span>rondas</div>
-        <div><span id="stat-correct" class="stat-value"></span>aciertos</div>
-        <div><span id="stat-pct" class="stat-value"></span>de acierto</div>
-        <div><span id="stat-streak" class="stat-value"></span>racha actual</div>
-        <div><span id="stat-best" class="stat-value"></span>mejor racha</div>
+        <div class="stat"><span id="stat-played" class="stat-value"></span>rondas</div>
+        <div class="stat"><span id="stat-correct" class="stat-value"></span>aciertos</div>
+        <div class="stat"><span id="stat-pct" class="stat-value"></span>de acierto</div>
+        <div class="stat"><span id="stat-streak" class="stat-value"></span>racha actual</div>
+        <div class="stat"><span id="stat-best" class="stat-value"></span>mejor racha</div>
       </div>
 
       <p id="stat-chance" class="chance"></p>
@@ -78,6 +101,17 @@
         <button id="reset-stats" class="link">Borrar estadísticas</button>
       </p>
     </section>
+
+    <footer class="footer">
+      <p>
+        Datos diarios de Binance (crypto) y Yahoo Finance (bolsa y FOREX), con
+        fines educativos. Esto no es asesoramiento financiero.
+      </p>
+      <p>
+        Gráficos con <a href="https://www.tradingview.com/lightweight-charts/">Lightweight Charts</a> de TradingView ·
+        <a href="https://github.com/Maletta22/predictor-graficos">Código en GitHub</a>
+      </p>
+    </footer>
   </main>
 
   <!-- type="module" permite usar import/export entre nuestros archivos JS -->

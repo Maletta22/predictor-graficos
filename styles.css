@@ -1,28 +1,138 @@
-/* Estilos básicos. El diseño cuidado llega en la Fase 5. */
+/* =========================================================================
+   Colores (variables CSS)
+   Cada color se define una vez aquí y se usa con var(--nombre).
+   chart.js también los lee, para que el gráfico vaya a juego.
+   ========================================================================= */
+
+:root {
+  --bg: #f4f5f7;          /* fondo de la página */
+  --surface: #ffffff;     /* fondo de las tarjetas */
+  --surface-alt: #f7f8fa; /* fondo de zonas secundarias */
+  --border: #e2e5ea;
+  --text: #1b1f24;
+  --muted: #5f6b7a;       /* texto secundario */
+  --grid: #eef0f3;        /* cuadrícula del gráfico */
+  --accent: #2962ff;      /* azul de botones y enlaces */
+  --accent-hover: #1e4bd8;
+  --up: #089981;          /* verde: sube */
+  --up-hover: #067a67;
+  --down: #f23645;        /* rojo: baja */
+  --down-hover: #d12a38;
+  --up-soft: rgba(8, 153, 129, 0.35);   /* velas reveladas que suben */
+  --down-soft: rgba(242, 54, 69, 0.35); /* velas reveladas que bajan */
+  --info-bg: #eef3ff;     /* fondo de la frase de la moneda */
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  color-scheme: light;
+}
+
+/* Modo oscuro: si el sistema del usuario usa tema oscuro, cambiamos los colores */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f1217;
+    --surface: #171b22;
+    --surface-alt: #1d222b;
+    --border: #2a2f38;
+    --text: #e6e9ee;
+    --muted: #9aa4b2;
+    --grid: #222833;
+    --accent: #5b8cff;
+    --accent-hover: #7aa2ff;
+    --up: #22ab94;
+    --up-hover: #2fc2a9;
+    --down: #f7525f;
+    --down-hover: #ff6b77;
+    --up-soft: rgba(34, 171, 148, 0.4);
+    --down-soft: rgba(247, 82, 95, 0.4);
+    --info-bg: #1c2433;
+    --shadow: none;
+    color-scheme: dark;
+  }
+}
+
+/* =========================================================================
+   Base
+   ========================================================================= */
+
+* {
+  box-sizing: border-box; /* el ancho incluye el relleno y el borde */
+}
 
 body {
   margin: 0;
-  font-family: system-ui, sans-serif;
-  background: #f5f5f5;
-  color: #222;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.5;
+  background: var(--bg);
+  color: var(--text);
 }
 
 main {
   max-width: 1100px;
   margin: 0 auto;
-  padding: 16px;
+  padding: 24px 16px 40px;
 }
 
-h1 {
-  margin-bottom: 4px;
+a {
+  color: var(--accent);
+}
+
+kbd {
+  padding: 1px 6px;
+  font-family: inherit;
+  font-size: 0.8em;
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  background: var(--surface-alt);
+}
+
+/* =========================================================================
+   Cabecera y "Cómo se juega"
+   ========================================================================= */
+
+.top h1 {
+  margin: 0;
+  font-size: 2rem;
+  letter-spacing: -0.02em;
 }
 
 .subtitle {
-  margin-top: 0;
-  color: #666;
+  margin: 4px 0 12px;
+  color: var(--muted);
 }
 
-/* Zona de juego: dos columnas (gráfico | panel lateral de 280 px) */
+.howto {
+  margin-bottom: 16px;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.howto summary {
+  cursor: pointer;
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.howto ol {
+  margin: 8px 0;
+  padding-left: 20px;
+}
+
+/* =========================================================================
+   Tarjetas y zona de juego
+   ========================================================================= */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+}
+
+.panel {
+  padding: 16px;
+}
+
+/* Dos columnas: gráfico | panel lateral de 280 px */
 .game {
   display: grid;
   grid-template-columns: 1fr 280px;
@@ -30,39 +140,43 @@ h1 {
   align-items: start;
 }
 
-/* En pantallas estrechas (móvil), una sola columna: el panel va debajo */
-@media (max-width: 760px) {
-  .game {
-    grid-template-columns: 1fr;
-  }
-}
-
 #chart {
   width: 100%;
   min-width: 0; /* deja que el gráfico encoja dentro de la rejilla */
-  height: 420px;
-  background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  height: 440px;
+  overflow: hidden; /* que el gráfico respete las esquinas redondeadas */
+}
+
+.question {
+  margin: 0 0 12px;
+  font-weight: 500;
+}
+
+.hint {
+  margin: 12px 0 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+  text-align: center;
 }
 
 .message {
   min-height: 1.5em;
-  color: #b00;
+  color: var(--down);
 }
+
+/* =========================================================================
+   Botones
+   ========================================================================= */
 
 button {
-  font-size: 1rem;
-  padding: 10px 20px;
+  font: inherit;
+  font-weight: 600;
+  padding: 12px 20px;
   border: none;
-  border-radius: 6px;
-  background: #2962ff;
+  border-radius: 8px;
   color: #fff;
   cursor: pointer;
-}
-
-button:hover {
-  background: #1e4bd8;
+  transition: background-color 0.15s;
 }
 
 button:disabled {
@@ -70,17 +184,35 @@ button:disabled {
   cursor: default;
 }
 
-/* Botones Sube / Baja */
-button.up {
-  background: #26a69a;
+/* Borde visible al navegar con el teclado (Tab) */
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
-button.up:hover {
-  background: #1e877d;
+button.primary {
+  width: 100%;
+  background: var(--accent);
+}
+
+button.primary:hover {
+  background: var(--accent-hover);
+}
+
+button.up {
+  background: var(--up);
+}
+
+button.up:hover:enabled {
+  background: var(--up-hover);
 }
 
 button.down {
-  background: #ef5350;
+  background: var(--down);
+}
+
+button.down:hover:enabled {
+  background: var(--down-hover);
 }
 
 .buttons {
@@ -90,55 +222,91 @@ button.down {
 
 .buttons button {
   flex: 1; /* los dos botones del mismo ancho */
+  font-size: 1.1rem;
 }
 
-button.down:hover {
-  background: #d9403d;
+/* Botón con aspecto de enlace (para acciones secundarias) */
+button.link {
+  padding: 0;
+  background: none;
+  color: var(--muted);
+  font-weight: normal;
+  font-size: 0.85rem;
+  text-decoration: underline;
 }
 
-/* Cajas blancas del panel lateral y de las estadísticas */
-.panel {
-  padding: 4px 16px 16px;
-  background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 8px;
+button.link:hover {
+  color: var(--down);
+}
+
+/* =========================================================================
+   Resultado
+   ========================================================================= */
+
+/* Franja de color arriba de la tarjeta según el resultado */
+#result.correct {
+  border-top: 4px solid var(--up);
+}
+
+#result.wrong {
+  border-top: 4px solid var(--down);
+}
+
+#result.tie {
+  border-top: 4px solid var(--muted);
 }
 
 .result-title {
+  margin: 0;
   font-size: 1.4rem;
-  font-weight: bold;
-  margin-bottom: 4px;
+  font-weight: 700;
+}
+
+.result-title.correct {
+  color: var(--up);
+}
+
+.result-title.wrong {
+  color: var(--down);
+}
+
+.result-title.tie {
+  color: var(--muted);
+}
+
+.result-change {
+  margin: 4px 0 0;
 }
 
 /* Lista "etiqueta: valor" del resultado */
 dl {
-  margin: 12px 0 16px;
+  margin: 16px 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
 }
 
 dt {
-  font-size: 0.8rem;
-  color: #666;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
 }
 
 dd {
-  margin: 0 0 8px;
+  margin: 0 0 10px;
   font-weight: 500;
 }
 
-.result-title.correct {
-  color: #1e877d;
+/* =========================================================================
+   Estadísticas
+   ========================================================================= */
+
+.stats {
+  margin-top: 8px;
 }
 
-.result-title.wrong {
-  color: #d9403d;
-}
-
-.result-title.tie {
-  color: #666;
-}
-
-/* Estadísticas */
 .stats h2 {
+  margin: 0 0 12px;
   font-size: 1.1rem;
 }
 
@@ -146,56 +314,108 @@ dd {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
   gap: 8px;
-  color: #666;
+}
+
+.stat {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--surface-alt);
+  color: var(--muted);
   font-size: 0.85rem;
 }
 
 .stat-value {
   display: block;
   font-size: 1.6rem;
-  font-weight: bold;
-  color: #222;
+  font-weight: 700;
+  color: var(--text);
+  font-variant-numeric: tabular-nums; /* cifras del mismo ancho */
 }
 
 .chance {
   margin: 16px 0;
-  padding: 12px;
-  background: #f0f4ff;
+  padding: 12px 14px;
+  border-left: 4px solid var(--accent);
   border-radius: 6px;
+  background: var(--info-bg);
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
 }
 
 th,
 td {
-  padding: 6px 4px;
+  padding: 8px 4px;
   text-align: left;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--border);
+}
+
+th {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  font-weight: 600;
 }
 
 .stats-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  color: #666;
+  margin: 12px 0 0;
+  color: var(--muted);
   font-size: 0.85rem;
 }
 
-/* Botón con aspecto de enlace (para acciones secundarias) */
-button.link {
-  padding: 0;
-  background: none;
-  color: #2962ff;
-  font-size: 0.85rem;
-  text-decoration: underline;
+/* =========================================================================
+   Pie de página
+   ========================================================================= */
+
+.footer {
+  margin-top: 32px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-align: center;
 }
 
-button.link:hover {
-  background: none;
-  color: #1e4bd8;
+.footer p {
+  margin: 4px 0;
+}
+
+/* =========================================================================
+   Móvil (pantallas de menos de 760 px de ancho)
+   ========================================================================= */
+
+@media (max-width: 760px) {
+  main {
+    padding-top: 16px;
+  }
+
+  .top h1 {
+    font-size: 1.6rem;
+  }
+
+  /* Una sola columna: el panel va debajo del gráfico */
+  .game {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  #chart {
+    height: 320px;
+  }
+
+  /* Los atajos de teclado no sirven en un móvil */
+  .hint {
+    display: none;
+  }
+
+  .stat-value {
+    font-size: 1.3rem;
+  }
 }
 
 /* Clase para ocultar elementos desde JavaScript */

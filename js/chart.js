@@ -16,14 +16,52 @@ const SECONDS_PER_DAY = 24 * 60 * 60;
 // (Un fin de semana largo con festivo dura como máximo 4: de jueves a lunes.)
 const EXCEPTIONAL_GAP_DAYS = 4;
 
-// Colores claros para las velas reveladas, para distinguirlas de las que
-// el usuario ya veía antes de decidir.
-const REVEALED_UP_COLOR = "#a5d6d1";
-const REVEALED_DOWN_COLOR = "#f5b1b0";
-
 let chart = null;
 let series = null;
 let decisionLine = null; // línea horizontal en el precio de la decisión (100)
+
+// Lo último que se dibujó, para poder repintarlo si cambia el tema
+let lastCandles = null;
+let lastRevealFrom = 0;
+
+// Lee un color de las variables CSS de styles.css (p. ej. "--up")
+function cssColor(name) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
+// Opciones de color del gráfico y de las velas, según el tema actual
+function chartColors() {
+  return {
+    layout: { background: { color: cssColor("--surface") }, textColor: cssColor("--muted") },
+    grid: {
+      vertLines: { color: cssColor("--grid") },
+      horzLines: { color: cssColor("--grid") },
+    },
+    rightPriceScale: { borderColor: cssColor("--border") },
+    timeScale: { borderColor: cssColor("--border") },
+  };
+}
+
+function seriesColors() {
+  return {
+    upColor: cssColor("--up"), // verde: la vela cerró más alta de lo que abrió
+    downColor: cssColor("--down"), // rojo: cerró más baja
+    wickUpColor: cssColor("--up"),
+    wickDownColor: cssColor("--down"),
+  };
+}
+
+// Aplica los colores del tema actual y repinta lo que hubiera dibujado
+function applyTheme() {
+  chart.applyOptions(chartColors());
+  series.applyOptions(seriesColors());
+  if (lastCandles !== null) {
+    series.setData(toChartData(lastCandles, lastRevealFrom));
+  }
+  if (decisionLine !== null) {
+    decisionLine.applyOptions({ color: cssColor("--muted") });
+  }
+}
 
 // Convierte el número de día (0, 1, 2...) en el "tiempo" que pide la librería
 // (segundos desde 1970). El 1 de enero de 1970 es solo un origen arbitrario.
@@ -40,11 +78,6 @@ function timeToLabel(time) {
 export function createCandleChart(container) {
   chart = LightweightCharts.createChart(container, {
     autoSize: true, // se adapta al tamaño del contenedor
-    layout: { background: { color: "#ffffff" }, textColor: "#333" },
-    grid: {
-      vertLines: { color: "#f0f0f0" },
-      horzLines: { color: "#f0f0f0" },
-    },
     localization: {
       locale: "es-ES",
       timeFormatter: timeToLabel, // etiqueta al pasar el ratón
@@ -55,13 +88,14 @@ export function createCandleChart(container) {
   });
 
   series = chart.addSeries(LightweightCharts.CandlestickSeries, {
-    upColor: "#26a69a", // verde: la vela cerró más alta de lo que abrió
-    downColor: "#ef5350", // rojo: cerró más baja
-    wickUpColor: "#26a69a",
-    wickDownColor: "#ef5350",
     borderVisible: false,
     priceFormat: { type: "price", precision: 2, minMove: 0.01 },
   });
+
+  applyTheme();
+
+  // Si el usuario cambia entre tema claro y oscuro, repintar con los colores nuevos
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", applyTheme);
 }
 
 // Cuenta los días laborables (lunes a viernes) que hay ENTRE dos fechas,
@@ -114,7 +148,7 @@ export function toChartData(candles, revealFrom = candles.length) {
     };
     // Vela revelada: color claro (cuerpo y mecha)
     if (i >= revealFrom) {
-      const color = candle.c >= candle.o ? REVEALED_UP_COLOR : REVEALED_DOWN_COLOR;
+      const color = candle.c >= candle.o ? cssColor("--up-soft") : cssColor("--down-soft");
       point.color = color;
       point.wickColor = color;
     }
@@ -135,6 +169,8 @@ function removeDecisionLine() {
 // Dibuja las velas visibles de una ronda nueva (sustituye a lo anterior)
 export function drawCandles(candles) {
   removeDecisionLine();
+  lastCandles = candles;
+  lastRevealFrom = candles.length;
   series.setData(toChartData(candles));
   chart.timeScale().fitContent(); // encajar todas las velas en pantalla
 }
@@ -143,10 +179,12 @@ export function drawCandles(candles) {
 // discontinua en 100 (el precio en el momento de decidir) como referencia.
 export function revealCandles(visible, hidden) {
   removeDecisionLine();
-  series.setData(toChartData([...visible, ...hidden], visible.length));
+  lastCandles = [...visible, ...hidden];
+  lastRevealFrom = visible.length;
+  series.setData(toChartData(lastCandles, lastRevealFrom));
   decisionLine = series.createPriceLine({
     price: 100,
-    color: "#888",
+    color: cssColor("--muted"),
     lineWidth: 1,
     lineStyle: LightweightCharts.LineStyle.Dashed,
     axisLabelVisible: false,

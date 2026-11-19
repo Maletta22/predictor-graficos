@@ -142,6 +142,7 @@ function answer(guess) {
     resultTitle.textContent = "➖ Empate: esta ronda no cuenta";
   }
   resultTitle.className = `result-title ${outcome}`;
+  resultBox.className = `card panel ${outcome}`; // franja de color arriba
 
   const direction = changePct > 0 ? "subió" : "bajó";
   resultChange.textContent =
@@ -213,10 +214,31 @@ function onResetStats() {
   }
 }
 
+// Atajos de teclado: ↑ sube, ↓ baja, Enter siguiente gráfico
+function onKeyDown(event) {
+  const choosing = !choiceBox.classList.contains("hidden") && !upButton.disabled;
+  const showingResult = !resultBox.classList.contains("hidden");
+
+  if (choosing && event.key === "ArrowUp") {
+    event.preventDefault(); // que la flecha no mueva la página
+    answer("up");
+  } else if (choosing && event.key === "ArrowDown") {
+    event.preventDefault();
+    answer("down");
+  } else if (showingResult && event.key === "Enter") {
+    // Si el foco está en un botón, Enter ya lo pulsa él solo: no repetir
+    if (event.target.tagName === "BUTTON") {
+      return;
+    }
+    newRound();
+  }
+}
+
 upButton.addEventListener("click", () => answer("up"));
 downButton.addEventListener("click", () => answer("down"));
 nextButton.addEventListener("click", newRound);
 resetButton.addEventListener("click", onResetStats);
+document.addEventListener("keydown", onKeyDown);
 
 renderStats();
 newRound(); // primera ronda al abrir la página
