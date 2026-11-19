@@ -2,7 +2,7 @@
 
 // Reglas del juego (ver CLAUDE.md, apartado 3)
 export const VISIBLE_CANDLES = 60;   // velas que ve el usuario
-export const REVEALED_CANDLES = 20;  // velas que se revelan después
+// Las velas que se revelan después (10, 20, 30 o 50) las elige el usuario
 const MAX_GAP_DAYS = 7;              // saltos mayores = agujero en los datos
 const MAX_TRIES = 50;                // intentos antes de rendirse
 
@@ -20,8 +20,9 @@ export async function loadJson(path) {
   return response.json();
 }
 
-// Lista de activos disponibles (data/index.json)
-async function loadAssetList() {
+// Lista de activos disponibles (data/index.json).
+// Se exporta para rellenar el desplegable "Activo".
+export async function loadAssetList() {
   if (assetList === null) {
     assetList = await loadJson("data/index.json");
   }
@@ -69,22 +70,30 @@ function normalize(candles, base) {
   }));
 }
 
-// Elige un activo y un fragmento al azar. Devuelve:
+// Elige un activo y un fragmento al azar.
+//   revealCount: cuántas velas se revelarán después (10, 20, 30 o 50)
+//   ticker: un activo concreto ("BTCUSDT"...), o "" para elegirlo al azar
+// Devuelve:
 //   visible: las 60 velas que ve el usuario (normalizadas)
-//   hidden:  las 20 velas siguientes, para revelar después (Fase 3)
+//   hidden:  las "revealCount" velas siguientes, para revelar después
 //   decisionPrice / finalPrice: precios REALES de cierre al decidir y
 //     20 velas después (solo se muestran tras responder)
 //   y los datos del activo (nombre, mercado...), que NO se muestran aún.
-export async function pickRandomRound() {
-  const list = await loadAssetList();
-  const totalCandles = VISIBLE_CANDLES + REVEALED_CANDLES;
+export async function pickRandomRound(revealCount, ticker = "") {
+  const fullList = await loadAssetList();
+  // Si el usuario eligió un activo, solo ese; si no, todos
+  const list = ticker === "" ? fullList : fullList.filter((a) => a.ticker === ticker);
+  if (list.length === 0) {
+    throw new Error(`No existe el activo ${ticker}`);
+  }
+  const totalCandles = VISIBLE_CANDLES + revealCount;
 
   for (let attempt = 0; attempt < MAX_TRIES; attempt++) {
     // 1. Un activo al azar (todos con la misma probabilidad)
     const info = list[randomInt(list.length)];
     const asset = await loadAsset(info.file);
 
-    // 2. Un punto de inicio al azar, dejando sitio para las 80 velas
+    // 2. Un punto de inicio al azar, dejando sitio para todas las velas
     const start = randomInt(asset.candles.length - totalCandles + 1);
     const windowCandles = asset.candles.slice(start, start + totalCandles);
 

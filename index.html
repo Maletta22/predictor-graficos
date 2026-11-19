@@ -26,7 +26,7 @@
       <ol>
         <li>Ves 60 velas diarias de un activo real (bolsa, FOREX o crypto) de un periodo al azar.</li>
         <li>Los precios están convertidos para que la última vela valga 100: así no se reconoce el activo.</li>
-        <li>Decides si, 20 velas después, el precio estará más arriba o más abajo.</li>
+        <li>Decides si, unas velas después, el precio estará más arriba o más abajo (20 velas por defecto; puedes elegir 10, 30 o 50).</li>
         <li>Se revela la continuación, el activo, las fechas y los precios reales.</li>
         <li>Si la variación es menor del 0,1 %, es empate y la ronda no cuenta.</li>
       </ol>
@@ -35,6 +35,27 @@
         excepcionales del mercado (como tras el 11-S) se ven como huecos.
       </p>
     </details>
+
+    <!-- Ajustes de la partida (se aplican en el siguiente gráfico) -->
+    <div class="settings">
+      <div class="setting">
+        <span class="setting-label">Velas a revelar</span>
+        <div id="reveal-options" class="segmented">
+          <button data-value="10" title="Corto plazo">10</button>
+          <button data-value="20">20</button>
+          <button data-value="30">30</button>
+          <button data-value="50" title="Largo plazo">50</button>
+        </div>
+      </div>
+      <label class="setting">
+        <span class="setting-label">Activo</span>
+        <select id="asset-select">
+          <option value="">🎲 Aleatorio</option>
+          <!-- main.js añade aquí un <option> por cada activo de data/index.json -->
+        </select>
+      </label>
+      <span id="settings-note" class="settings-note"></span>
+    </div>
 
     <!-- Zona de juego: gráfico a la izquierda, panel lateral a la derecha
          (en pantallas estrechas, el panel pasa debajo del gráfico) -->
@@ -45,7 +66,7 @@
       <aside class="side">
         <!-- Paso 1: el usuario decide -->
         <div id="choice" class="card panel">
-          <p class="question">¿Qué hará el precio en las próximas 20 velas?</p>
+          <p id="question" class="question">¿Qué hará el precio en las próximas velas?</p>
           <div class="buttons">
             <button id="guess-up" class="up">▲ Sube</button>
             <button id="guess-down" class="down">▼ Baja</button>
@@ -58,6 +79,8 @@
         <div id="result" class="card panel hidden" aria-live="polite">
           <p id="result-title" class="result-title"></p>
           <p id="result-change" class="result-change"></p>
+          <!-- Insignias: racha, récord, rondas jugadas... (las añade main.js) -->
+          <div id="result-badges" class="badges"></div>
           <dl>
             <dt>Activo</dt>
             <dd id="result-asset"></dd>
@@ -65,7 +88,7 @@
             <dd id="result-dates"></dd>
             <dt>Precio al decidir</dt>
             <dd id="result-price-start"></dd>
-            <dt>Precio 20 velas después</dt>
+            <dt id="result-price-end-label">Precio al final</dt>
             <dd id="result-price-end"></dd>
           </dl>
           <button id="next-round" class="primary">Siguiente gráfico</button>

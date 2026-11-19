@@ -1,13 +1,24 @@
 // main.js — flujo del juego:
 //   1. Se muestra un fragmento aleatorio (60 velas).
 //   2. El usuario pulsa "Sube" o "Baja".
-//   3. Se revelan las 20 velas siguientes y se dice si acertó.
+//   3. Se revelan las velas siguientes (10, 20, 30 o 50, según los ajustes)
+//      y se dice si acertó.
 //   4. "Siguiente gráfico" vuelve al paso 1.
 
-import { pickRandomRound } from "./data.js";
+import { pickRandomRound, loadAssetList } from "./data.js";
 import { createCandleChart, drawCandles, revealCandles } from "./chart.js";
 import { loadStats, recordResult, resetStats, coinProbabilityAtLeast } from "./stats.js";
 import { loadContext, describeFed, eventsInRange, newsSearchUrl } from "./context.js";
+import { loadSettings, saveSettings } from "./settings.js";
+
+// Racha a partir de la cual aparece el fuego 🔥
+const FIRE_STREAK = 5;
+
+// Número de rondas que merecen una insignia 🎯
+const ROUND_MILESTONES = [10, 25, 50, 100, 250, 500, 1000];
+
+// Variación (en %) a partir de la cual el movimiento se considera brusco ⚡
+const BIG_MOVE_PCT = 10;
 
 // Variación mínima para que la ronda cuente (CLAUDE.md, apartado 3)
 const TIE_THRESHOLD_PCT = 0.1;
@@ -18,6 +29,7 @@ const MARKET_NAMES = { crypto: "Crypto", bolsa: "Bolsa", forex: "FOREX" };
 // Elementos de la página que vamos a usar
 const message = document.getElementById("message");
 const choiceBox = document.getElementById("choice");
+const question = document.getElementById("question");
 const upButton = document.getElementById("guess-up");
 const downButton = document.getElementById("guess-down");
 const resultBox = document.getElementById("result");
@@ -27,7 +39,14 @@ const resultAsset = document.getElementById("result-asset");
 const resultDates = document.getElementById("result-dates");
 const resultPriceStart = document.getElementById("result-price-start");
 const resultPriceEnd = document.getElementById("result-price-end");
+const resultPriceEndLabel = document.getElementById("result-price-end-label");
+const resultBadges = document.getElementById("result-badges");
 const nextButton = document.getElementById("next-round");
+
+// Elementos de los ajustes
+const revealOptions = document.getElementById("reveal-options");
+const assetSelect = document.getElementById("asset-select");
+const settingsNote = document.getElementById("settings-note");
 
 // Elementos de las estadísticas
 const statPlayed = document.getElementById("stat-played");
@@ -52,8 +71,9 @@ let currentRound = null;
 // ¿Se han cargado los datos de contexto (FED y eventos)?
 let contextReady = false;
 
-// Estadísticas guardadas en el navegador
+// Estadísticas y ajustes guardados en el navegador
 let stats = loadStats();
+const settings = loadSettings();
 
 createCandleChart(document.getElementById("chart"));
 
@@ -114,6 +134,7 @@ function formatDate(isoDate) {
 // Paso 1: nueva ronda
 async function newRound() {
   message.textContent = "";
+  settingsNote.textContent = ""; // los ajustes nuevos ya se aplican en esta ronda
   resultBox.classList.add("hidden");
   contextBox.classList.add("hidden");
   choiceBox.classList.remove("hidden");
@@ -121,7 +142,9 @@ async function newRound() {
   downButton.disabled = true;
 
   try {
-    currentRound = await pickRandomRound();
+    currentRound = await pickRandomRound(settings.revealCount, settings.ticker);
+    question.textContent =
+      `¿Qué hará el precio en las próximas ${currentRound.hidden.length} velas?`;
     drawCandles(currentRound.visible);
     upButton.disabled = false;
     downButton.disabled = false;
@@ -140,8 +163,10 @@ function answer(guess) {
   currentRound = null;
 
   const { outcome, changePct } = evaluateGuess(round, guess);
+  const previousBest = stats.bestStreak; // para detectar un récord nuevo
   recordResult(stats, round.market, outcome);
   renderStats();
+  renderBadges(outcome, changePct, previousBest);
 
   revealCandles(round.visible, round.hidden);
 
@@ -155,9 +180,10 @@ function answer(guess) {
   resultTitle.className = `result-title ${outcome}`;
   resultBox.className = `card panel ${outcome}`; // franja de color arriba
 
+  const revealed = round.hidden.length;
   const direction = changePct > 0 ? "subió" : "bajó";
   resultChange.textContent =
-    `En las 20 velas siguientes el precio ${direction} un ${formatPct(Math.abs(changePct))}.` +
+    `En las ${revealed} velas siguientes el precio ${direction} un ${formatPct(Math.abs(changePct))}.` +
     (outcome === "tie" ? ` (Menos de un ${TIE_THRESHOLD_PCT.toLocaleString("es-ES")} % se considera empate.)` : "");
 
   const firstDate = round.visible[0].t;
@@ -166,11 +192,40 @@ function answer(guess) {
   resultAsset.textContent = `${round.name} (${MARKET_NAMES[round.market]})`;
   resultDates.textContent = `Del ${formatDate(firstDate)} al ${formatDate(lastDate)}`;
   resultPriceStart.textContent = `${formatPrice(round.decisionPrice)} (${formatDate(decisionDate)})`;
+  resultPriceEndLabel.textContent = `Precio ${revealed} velas después`;
   resultPriceEnd.textContent = `${formatPrice(round.finalPrice)} (${formatDate(lastDate)})`;
 
   choiceBox.classList.add("hidden");
   resultBox.classList.remove("hidden");
   renderContext(round);
+}
+
+// ---------------------------------------------------------------------------
+// Insignias del resultado (recursos estéticos)
+// ---------------------------------------------------------------------------
+
+// Añade al resultado insignias como "🔥 ¡5 seguidas!" o "🏆 ¡Nueva mejor racha!"
+function renderBadges(outcome, changePct, previousBest) {
+  const badges = [];
+
+  if (outcome === "correct" && stats.currentStreak >= FIRE_STREAK) {
+    badges.push(`🔥 ¡${stats.currentStreak} seguidas!`);
+  }
+  // Récord nuevo (solo a partir de 3, para que no salga en las primeras rondas)
+  if (stats.bestStreak > previousBest && stats.bestStreak >= 3) {
+    badges.push("🏆 ¡Nueva mejor racha!");
+  }
+  if (outcome !== "tie" && ROUND_MILESTONES.includes(stats.played)) {
+    badges.push(`🎯 ¡${stats.played} rondas jugadas!`);
+  }
+  if (Math.abs(changePct) >= BIG_MOVE_PCT) {
+    badges.push(`⚡ Movimiento brusco: más del ${BIG_MOVE_PCT} %`);
+  }
+
+  resultBadges.innerHTML = "";
+  for (const text of badges) {
+    resultBadges.appendChild(element("span", "badge", text));
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -252,7 +307,25 @@ function chanceSentence(correct, played) {
   const probability = coinProbabilityAtLeast(correct, played);
   const pct = Math.round(probability * 100);
   const howOften = probability < 0.01 ? "menos del 1 %" : `el ${formatPct(pct)}`;
-  return `Con ${correct} de ${played}, una moneda lo haría igual de bien o mejor ${howOften} de las veces.`;
+  let sentence =
+    `🪙 Con ${correct} de ${played}, una moneda lo haría igual de bien o mejor ${howOften} de las veces.`;
+
+  // Comentarios extra, solo con suficientes rondas para que signifiquen algo
+  if (played >= 20 && probability < 0.05) {
+    sentence += " 🧠 Con tantas rondas, ya es difícil atribuirlo solo a la suerte.";
+  } else if (played >= 20 && correct / played < 0.45) {
+    sentence += " 🙃 Vas peor que la moneda: ¿y si apostaras justo lo contrario?";
+  }
+  return sentence;
+}
+
+// Racha con fuego a partir de FIRE_STREAK (🔥), doble a partir del doble (🔥🔥)
+function renderStreak(streak) {
+  statStreak.textContent = streak;
+  if (streak >= FIRE_STREAK) {
+    const flames = streak >= FIRE_STREAK * 2 ? "🔥🔥" : "🔥";
+    statStreak.appendChild(element("span", "flame", ` ${flames}`));
+  }
 }
 
 // Escribe las estadísticas en la página
@@ -260,7 +333,7 @@ function renderStats() {
   statPlayed.textContent = stats.played;
   statCorrect.textContent = stats.correct;
   statPct.textContent = hitRate(stats.correct, stats.played);
-  statStreak.textContent = stats.currentStreak;
+  renderStreak(stats.currentStreak);
   statBest.textContent = stats.bestStreak;
   statChance.textContent = chanceSentence(stats.correct, stats.played);
 
@@ -288,8 +361,62 @@ function onResetStats() {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Ajustes: velas a revelar y activo
+// ---------------------------------------------------------------------------
+
+// Marca en la página los ajustes actuales
+function renderSettings() {
+  for (const button of revealOptions.querySelectorAll("button")) {
+    const isActive = Number(button.dataset.value) === settings.revealCount;
+    button.classList.toggle("active", isActive);
+    button.setAttribute("aria-pressed", isActive);
+  }
+  assetSelect.value = settings.ticker;
+}
+
+// Guarda un ajuste cambiado y avisa de que se aplicará en el siguiente gráfico
+// (si se aplicara ya, se podría usar para saltarse un gráfico difícil)
+function changeSetting(key, value) {
+  settings[key] = value;
+  saveSettings(settings);
+  renderSettings();
+  settingsNote.textContent = "Se aplicará en el siguiente gráfico.";
+}
+
+function onRevealOptionClick(event) {
+  const button = event.target.closest("button");
+  if (button !== null) {
+    changeSetting("revealCount", Number(button.dataset.value));
+  }
+}
+
+// Rellena el desplegable con los activos de data/index.json
+async function fillAssetSelect() {
+  const assets = await loadAssetList();
+  for (const asset of assets) {
+    const option = document.createElement("option");
+    option.value = asset.ticker;
+    option.textContent = `${asset.name} (${MARKET_NAMES[asset.market]})`;
+    assetSelect.appendChild(option);
+  }
+  // Si el activo guardado ya no existe, volver a "Aleatorio"
+  if (!assets.some((asset) => asset.ticker === settings.ticker)) {
+    settings.ticker = "";
+  }
+  renderSettings();
+}
+
+// ---------------------------------------------------------------------------
+// Teclado
+// ---------------------------------------------------------------------------
+
 // Atajos de teclado: ↑ sube, ↓ baja, Enter siguiente gráfico
 function onKeyDown(event) {
+  // En el desplegable, las flechas cambian la opción: no son atajos
+  if (event.target.tagName === "SELECT") {
+    return;
+  }
   const choosing = !choiceBox.classList.contains("hidden") && !upButton.disabled;
   const showingResult = !resultBox.classList.contains("hidden");
 
@@ -312,9 +439,13 @@ upButton.addEventListener("click", () => answer("up"));
 downButton.addEventListener("click", () => answer("down"));
 nextButton.addEventListener("click", newRound);
 resetButton.addEventListener("click", onResetStats);
+revealOptions.addEventListener("click", onRevealOptionClick);
+assetSelect.addEventListener("change", () => changeSetting("ticker", assetSelect.value));
 document.addEventListener("keydown", onKeyDown);
 
+renderSettings();
 renderStats();
+fillAssetSelect().catch((error) => console.warn("No se pudo cargar la lista de activos:", error));
 newRound(); // primera ronda al abrir la página
 
 // Datos de contexto en segundo plano. Si fallan, el juego sigue sin la tarjeta.

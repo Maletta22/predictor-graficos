@@ -16,6 +16,9 @@ const SECONDS_PER_DAY = 24 * 60 * 60;
 // (Un fin de semana largo con festivo dura como máximo 4: de jueves a lunes.)
 const EXCEPTIONAL_GAP_DAYS = 4;
 
+// Ancho mínimo de cada vela en píxeles, para que siempre se vea su cuerpo
+const MIN_BAR_SPACING = 7;
+
 let chart = null;
 let series = null;
 let decisionLine = null; // línea horizontal en el precio de la decisión (100)
@@ -48,6 +51,8 @@ function seriesColors() {
     downColor: cssColor("--down"), // rojo: cerró más baja
     wickUpColor: cssColor("--up"),
     wickDownColor: cssColor("--down"),
+    borderUpColor: cssColor("--up"), // borde del cuerpo, para que se vea nítido
+    borderDownColor: cssColor("--down"),
   };
 }
 
@@ -88,7 +93,7 @@ export function createCandleChart(container) {
   });
 
   series = chart.addSeries(LightweightCharts.CandlestickSeries, {
-    borderVisible: false,
+    borderVisible: true,
     priceFormat: { type: "price", precision: 2, minMove: 0.01 },
   });
 
@@ -146,10 +151,11 @@ export function toChartData(candles, revealFrom = candles.length) {
       low: candle.l,
       close: candle.c,
     };
-    // Vela revelada: color claro (cuerpo y mecha)
+    // Vela revelada: color claro (cuerpo, borde y mecha)
     if (i >= revealFrom) {
       const color = candle.c >= candle.o ? cssColor("--up-soft") : cssColor("--down-soft");
       point.color = color;
+      point.borderColor = color;
       point.wickColor = color;
     }
     data.push(point);
@@ -166,13 +172,29 @@ function removeDecisionLine() {
   }
 }
 
+// Encaja las velas en pantalla, pero sin que cada una baje de MIN_BAR_SPACING
+// píxeles: por debajo, el cuerpo de la vela desaparece y parece un palito.
+// Si no caben todas (p. ej. en un móvil), se ven las más recientes y se puede
+// arrastrar el gráfico para ver las anteriores.
+function fitCandles(barCount) {
+  const timeScale = chart.timeScale();
+  const spacing = timeScale.width() / barCount;
+  if (spacing >= MIN_BAR_SPACING) {
+    timeScale.fitContent(); // caben todas
+  } else {
+    timeScale.applyOptions({ barSpacing: MIN_BAR_SPACING });
+    timeScale.scrollToRealTime(); // ir al final (las velas más recientes)
+  }
+}
+
 // Dibuja las velas visibles de una ronda nueva (sustituye a lo anterior)
 export function drawCandles(candles) {
   removeDecisionLine();
   lastCandles = candles;
   lastRevealFrom = candles.length;
-  series.setData(toChartData(candles));
-  chart.timeScale().fitContent(); // encajar todas las velas en pantalla
+  const data = toChartData(candles);
+  series.setData(data);
+  fitCandles(data.length);
 }
 
 // Tras la decisión: dibuja las velas visibles + las reveladas, y una línea
@@ -181,7 +203,8 @@ export function revealCandles(visible, hidden) {
   removeDecisionLine();
   lastCandles = [...visible, ...hidden];
   lastRevealFrom = visible.length;
-  series.setData(toChartData(lastCandles, lastRevealFrom));
+  const data = toChartData(lastCandles, lastRevealFrom);
+  series.setData(data);
   decisionLine = series.createPriceLine({
     price: 100,
     color: cssColor("--muted"),
@@ -190,5 +213,5 @@ export function revealCandles(visible, hidden) {
     axisLabelVisible: false,
     title: "Tu decisión",
   });
-  chart.timeScale().fitContent();
+  fitCandles(data.length);
 }

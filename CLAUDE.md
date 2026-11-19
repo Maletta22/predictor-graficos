@@ -27,7 +27,8 @@ consistente es muy difícil y comparar su resultado con el azar (50 %).
 | Parámetro | Valor por defecto | Notas |
 |---|---|---|
 | Velas visibles | 60 | Lo que ve el usuario antes de decidir |
-| Velas reveladas | 20 | La continuación que se muestra tras la decisión |
+| Velas reveladas | 20 | El usuario elige 10 (corto plazo), 20, 30 o 50 |
+| Activo | aleatorio | El usuario puede fijar un solo activo |
 | Criterio "sube" | cierre de la última vela revelada > cierre de la última vela visible | |
 | Empate | variación absoluta < 0,1 % → la ronda no cuenta | Evita castigar por ruido |
 | Temporalidad | diaria | Más adelante: 1h, 4h, semanal |
@@ -43,6 +44,12 @@ consistente es muy difícil y comparar su resultado con el azar (50 %).
 - Fragmentos con un salto de más de 7 días naturales entre dos velas se
   descartan: son agujeros en los datos, no cierres reales (el cierre tras el
   11-S, de 7 días, sí se mantiene).
+- Los ajustes (velas reveladas y activo) se guardan en `localStorage` y se
+  aplican **en el siguiente gráfico**, nunca en el actual: así no sirven para
+  saltarse un gráfico difícil.
+- Velas japonesas con cuerpo y borde visibles: mínimo 7 px por vela. Si no
+  caben todas (móvil, 50 velas reveladas), se ven las más recientes y el
+  gráfico se puede arrastrar.
 - El activo y las fechas **no se muestran** hasta después de responder.
 - El eje de precios se **normaliza** (la última vela visible vale 100) para que
   no se pueda reconocer el activo por su precio.
@@ -58,6 +65,10 @@ consistente es muy difícil y comparar su resultado con el azar (50 %).
   o más lanzando una moneda (test binomial unilateral, p = 0,5). Mostrarlo en
   lenguaje claro: "Con 34 de 60, una moneda lo haría igual de bien o mejor el 18 % de las veces".
 - Las estadísticas se guardan en `localStorage` (sin cuentas en v1).
+- Recursos estéticos: 🔥 en la racha desde 5 aciertos seguidos (🔥🔥 desde 10);
+  insignias en el resultado (🔥 racha, 🏆 nueva mejor racha, 🎯 hitos de rondas
+  jugadas, ⚡ movimiento de más del 10 %); comentarios en la frase de la moneda
+  a partir de 20 rondas. Animaciones suaves que respetan "reducir movimiento".
 
 ## 5. Arquitectura
 
@@ -73,6 +84,7 @@ consistente es muy difícil y comparar su resultado con el azar (50 %).
 │   ├── chart.js        # dibujar el gráfico
 │   ├── data.js         # cargar datos y elegir fragmentos al azar
 │   ├── stats.js        # estadísticas y test binomial
+│   ├── settings.js     # ajustes de la partida (velas reveladas, activo)
 │   └── context.js      # contexto tras revelar: FED, eventos, enlace a noticias
 ├── data/
 │   ├── index.json      # lista de activos disponibles y su mercado
@@ -130,7 +142,9 @@ pública con fines comerciales, revisar licencias.
 - [x] **Fase 4** – Estadísticas, rachas y comparación con el azar.
 - [ ] **Fase 5** – Diseño cuidado, móvil, publicar en GitHub Pages.
 - [ ] **Fase 6+** – Ideas futuras (no empezar sin pedirlo):
-  - Elegir mercado y temporalidad.
+  - Elegir mercado y temporalidad. (Hecho: elegir un activo concreto y las
+    velas reveladas. Pendiente: temporalidad 1h/4h/semanal.)
+  - Estadísticas separadas por número de velas reveladas (ahora van juntas).
   - Modo "cuánto sube": el usuario estima el % de variación.
   - Indicadores opcionales (medias móviles, RSI) para ver si ayudan.
   - Cuentas de usuario y ranking (Supabase).
