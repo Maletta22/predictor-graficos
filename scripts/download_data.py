@@ -35,15 +35,68 @@ MIN_YEARS = 5
 #   ticker: nombre corto que usamos nosotros (y nombre del archivo .json)
 #   source: de dónde se descarga ("binance" o "yahoo")
 #   symbol: cómo se llama el activo en esa fuente
-# Fase 1: solo 3 activos de prueba, uno de cada mercado.
+#   market: "crypto", "bolsa", "forex" o "materias" (materias primas)
 ASSETS = [
+    # --- Crypto (Binance) ---
     {"ticker": "BTCUSDT", "name": "Bitcoin / USD", "market": "crypto",
      "source": "binance", "symbol": "BTCUSDT"},
+    {"ticker": "ETHUSDT", "name": "Ethereum / USD", "market": "crypto",
+     "source": "binance", "symbol": "ETHUSDT"},
+    {"ticker": "SOLUSDT", "name": "Solana / USD", "market": "crypto",
+     "source": "binance", "symbol": "SOLUSDT"},
+
+    # --- Bolsa: índices (Yahoo Finance) ---
     {"ticker": "SPX", "name": "S&P 500", "market": "bolsa",
      "source": "yahoo", "symbol": "^GSPC"},
+    {"ticker": "NDX", "name": "Nasdaq 100", "market": "bolsa",
+     "source": "yahoo", "symbol": "^NDX"},
+    {"ticker": "STOXX50", "name": "Euro Stoxx 50", "market": "bolsa",
+     "source": "yahoo", "symbol": "^STOXX50E"},
+    {"ticker": "DAX", "name": "DAX (Alemania)", "market": "bolsa",
+     "source": "yahoo", "symbol": "^GDAXI"},
+    {"ticker": "IBEX", "name": "IBEX 35", "market": "bolsa",
+     "source": "yahoo", "symbol": "^IBEX"},
+    {"ticker": "N225", "name": "Nikkei 225 (Japón)", "market": "bolsa",
+     "source": "yahoo", "symbol": "^N225"},
+
+    # --- Bolsa: acciones ---
+    {"ticker": "AAPL", "name": "Apple", "market": "bolsa",
+     "source": "yahoo", "symbol": "AAPL"},
+    {"ticker": "SAN", "name": "Banco Santander", "market": "bolsa",
+     "source": "yahoo", "symbol": "SAN.MC"},
+
+    # --- FOREX (Yahoo Finance) ---
     {"ticker": "EURUSD", "name": "Euro / Dólar", "market": "forex",
      "source": "yahoo", "symbol": "EURUSD=X"},
+    {"ticker": "GBPUSD", "name": "Libra / Dólar", "market": "forex",
+     "source": "yahoo", "symbol": "GBPUSD=X"},
+    {"ticker": "USDJPY", "name": "Dólar / Yen", "market": "forex",
+     "source": "yahoo", "symbol": "USDJPY=X"},
+    {"ticker": "USDCHF", "name": "Dólar / Franco suizo", "market": "forex",
+     "source": "yahoo", "symbol": "USDCHF=X"},
+    {"ticker": "AUDUSD", "name": "Dólar australiano / Dólar", "market": "forex",
+     "source": "yahoo", "symbol": "AUDUSD=X"},
+    {"ticker": "EURGBP", "name": "Euro / Libra", "market": "forex",
+     "source": "yahoo", "symbol": "EURGBP=X"},
+
+    # --- Materias primas (Yahoo Finance) ---
+    # Oro y plata: usamos los fondos cotizados (ETF) GLD y SLV, que compran el
+    # metal físico y se mueven igual que él. Los futuros (GC=F, SI=F) tienen
+    # cientos de días sin datos en Yahoo. Ojo: el precio es el de una
+    # participación del fondo, no el de una onza.
+    # Brent y no WTI: el WTI cotizó en negativo en abril de 2020 y un precio
+    # negativo rompe la normalización (la última vela visible = 100).
+    {"ticker": "GOLD", "name": "Oro (fondo GLD)", "market": "materias",
+     "source": "yahoo", "symbol": "GLD"},
+    {"ticker": "SILVER", "name": "Plata (fondo SLV)", "market": "materias",
+     "source": "yahoo", "symbol": "SLV"},
+    {"ticker": "BRENT", "name": "Petróleo Brent", "market": "materias",
+     "source": "yahoo", "symbol": "BZ=F"},
 ]
+
+# Si un activo sube o baja más que esto en un solo día, el script avisa:
+# podría ser un error en los datos (p. ej. un "split" de acciones sin ajustar).
+SUSPICIOUS_DAILY_MOVE = 0.30  # 30 %
 
 
 # ---------------------------------------------------------------------------
@@ -218,6 +271,12 @@ def main():
               f" Velas eliminadas en la limpieza: {removed}")
         if years < MIN_YEARS:
             print(f"  AVISO: menos de {MIN_YEARS} años de datos.")
+
+        # Control de calidad: movimientos diarios sospechosamente grandes
+        for previous, candle in zip(candles, candles[1:]):
+            move = candle["c"] / previous["c"] - 1
+            if abs(move) > SUSPICIOUS_DAILY_MOVE:
+                print(f"  AVISO: {move:+.0%} el {candle['t']} (¿error en los datos?)")
 
         # Guardar el archivo del activo con el formato del CLAUDE.md
         output = {

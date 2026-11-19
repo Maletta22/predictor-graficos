@@ -6,22 +6,34 @@
 
 const STORAGE_KEY = "predictor-stats-v1";
 
-const MARKETS = ["bolsa", "forex", "crypto"];
-
-// Estadísticas vacías, para un jugador nuevo
+// Estadísticas vacías, para un jugador nuevo.
+// Los grupos (byMarket, byHorizon, byAsset) guardan { played, correct } por
+// cada mercado, plazo o activo, y se van creando a medida que se juega:
+//   byMarket:  { "bolsa": {...}, "crypto": {...} }
+//   byHorizon: { "10": {...}, "20": {...} }    (velas reveladas)
+//   byAsset:   { "BTCUSDT": {...}, "GOLD": {...} }
 function emptyStats() {
-  const byMarket = {};
-  for (const market of MARKETS) {
-    byMarket[market] = { played: 0, correct: 0 };
-  }
   return {
     played: 0,        // rondas que cuentan (sin empates)
     correct: 0,       // aciertos
     ties: 0,          // empates (no cuentan para el % de acierto)
     currentStreak: 0, // aciertos seguidos ahora mismo
     bestStreak: 0,    // mejor racha de aciertos seguidos
-    byMarket,
+    byMarket: {},
+    byHorizon: {},
+    byAsset: {},
   };
+}
+
+// Suma una ronda a un grupo, creando la entrada si aún no existe
+function addToGroup(group, key, isCorrect) {
+  if (!(key in group)) {
+    group[key] = { played: 0, correct: 0 };
+  }
+  group[key].played++;
+  if (isCorrect) {
+    group[key].correct++;
+  }
 }
 
 // Lee las estadísticas guardadas. Si no hay, o no se pueden leer
@@ -48,18 +60,20 @@ function saveStats(stats) {
 }
 
 // Apunta el resultado de una ronda y lo guarda.
+//   round: la ronda jugada (de ella sacamos mercado, activo y velas reveladas)
 //   outcome: "correct" | "wrong" | "tie"
-export function recordResult(stats, market, outcome) {
+export function recordResult(stats, round, outcome) {
   if (outcome === "tie") {
     // El empate no cuenta: ni suma rondas ni rompe la racha
     stats.ties++;
   } else {
     const isCorrect = outcome === "correct";
     stats.played++;
-    stats.byMarket[market].played++;
+    addToGroup(stats.byMarket, round.market, isCorrect);
+    addToGroup(stats.byHorizon, String(round.hidden.length), isCorrect);
+    addToGroup(stats.byAsset, round.ticker, isCorrect);
     if (isCorrect) {
       stats.correct++;
-      stats.byMarket[market].correct++;
       stats.currentStreak++;
       stats.bestStreak = Math.max(stats.bestStreak, stats.currentStreak);
     } else {

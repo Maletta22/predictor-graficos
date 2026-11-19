@@ -536,10 +536,40 @@ dd {
   background: var(--info-bg);
 }
 
+.breakdown-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-bottom: 8px;
+}
+
+.breakdown-header h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+/* En móvil, la tabla puede desplazarse en horizontal sin romper la página */
+.table-scroll {
+  overflow-x: auto;
+}
+
+.table-note {
+  margin: 8px 0 0;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
   font-variant-numeric: tabular-nums;
+}
+
+td.empty {
+  color: var(--muted);
+  text-align: center;
 }
 
 th,

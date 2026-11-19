@@ -24,7 +24,14 @@ PROJECT_DIR = Path(__file__).resolve().parent.parent
 
 
 class ChunkedHandler(SimpleHTTPRequestHandler):
-    """Igual que el servidor normal de Python, pero envía en trozos pequeños."""
+    """Igual que el servidor normal de Python, pero envía en trozos pequeños
+    y pide al navegador que no guarde copias (caché) de los archivos."""
+
+    def end_headers(self):
+        # Sin esto, el navegador puede mezclar un archivo JS nuevo con otro
+        # antiguo guardado en caché, y la página falla tras un cambio.
+        self.send_header("Cache-Control", "no-cache")
+        super().end_headers()
 
     def copyfile(self, source, outputfile):
         while True:

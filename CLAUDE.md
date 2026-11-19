@@ -37,10 +37,12 @@ consistente es muy difícil y comparar su resultado con el azar (50 %).
   festivos) NO se muestran; las velas van seguidas, como en cualquier gráfico.
   Los cierres *excepcionales* (p. ej. tras el 11-S) SÍ se muestran como huecos
   vacíos, porque es didáctico ver cómo "salta" el mercado al reabrir. Criterio:
-  más de 4 días naturales entre dos velas = cierre excepcional (un fin de semana
-  largo con festivo dura como máximo 4), y se dibuja un hueco por cada día
-  laborable sin cotizar. Las 60 velas visibles son velas *con cotización*; los
-  huecos no cuentan.
+  **4 o más días laborables sin cotizar** entre dos velas = cierre excepcional
+  (el 11-S fueron 4), salvo si el cierre abarca el cambio de año (el Año Nuevo
+  japonés cierra 4 laborables y es normal). Los festivos normales dejan como
+  mucho 3 (Semana Santa y Navidad en Europa, Golden Week en Japón). Se dibuja un
+  hueco por cada día laborable sin cotizar. Las 60 velas visibles son velas
+  *con cotización*; los huecos no cuentan.
 - Fragmentos con un salto de más de 7 días naturales entre dos velas se
   descartan: son agujeros en los datos, no cierres reales (el cierre tras el
   11-S, de 7 días, sí se mantiene).
@@ -54,13 +56,19 @@ consistente es muy difícil y comparar su resultado con el azar (50 %).
 - El eje de precios se **normaliza** (la última vela visible vale 100) para que
   no se pueda reconocer el activo por su precio.
 - Tras revelar: mostrar acierto/fallo, variación en %, activo, fechas reales y
-  precios reales (al decidir y 20 velas después), en un panel lateral junto
+  precios reales (al decidir y N velas después), en un panel lateral junto
   al gráfico (debajo en móvil).
 
 ## 4. Estadísticas (v1)
 
 - Rondas jugadas, aciertos, % de acierto, racha actual y mejor racha.
-- Desglose por mercado (bolsa / FOREX / crypto).
+- Totales comunes (aciertos y fallos de todas las rondas) y, debajo, una tabla
+  de **detalle** con pestañas: por **mercado** (bolsa / FOREX / crypto /
+  materias primas), por **plazo** (10 / 20 / 30 / 50 velas reveladas) o por
+  **activo**. Cada fila incluye su propia comparación con la moneda y un aviso
+  de que con menos de ~30 rondas por grupo no hay que sacar conclusiones.
+- Formato guardado: `byMarket`, `byHorizon` y `byAsset`, cada uno
+  `{ clave: { played, correct } }`; las entradas se crean al jugar.
 - **Comparación con el azar**: probabilidad de obtener ese número de aciertos
   o más lanzando una moneda (test binomial unilateral, p = 0,5). Mostrarlo en
   lenguaje claro: "Con 34 de 60, una moneda lo haría igual de bien o mejor el 18 % de las veces".
@@ -118,14 +126,23 @@ consistente es muy difícil y comparar su resultado con el azar (50 %).
 | FOREX | Yahoo Finance (`EURUSD=X`, etc.) | Python + `yfinance` |
 | Tipos de la FED | FRED (serie `FEDFUNDS`, pública, sin cuenta) | Python + `requests` |
 
-Activos iniciales (ampliable): BTC, ETH, SOL · S&P 500, IBEX 35, Nasdaq 100,
-Apple, Santander · EUR/USD, GBP/USD, USD/JPY.
+Activos incluidos (20), en la lista `ASSETS` de `download_data.py`:
+- **Crypto**: Bitcoin, Ethereum, Solana.
+- **Bolsa**: S&P 500, Nasdaq 100, Euro Stoxx 50, DAX, IBEX 35, Nikkei 225, Apple, Santander.
+- **FOREX**: EUR/USD, GBP/USD, USD/JPY, USD/CHF, AUD/USD, EUR/GBP.
+- **Materias primas** (`market: "materias"`): oro, plata y petróleo Brent.
 
-Ampliación prevista (más adelante): materias primas como **oro** (`GC=F`),
-plata y petróleo; más índices y mercados (DAX, Nikkei, Euro Stoxx 50,
-emergentes) y más divisas (USD/CHF, AUD/USD, EUR/GBP...). Basta con añadirlos a
-la lista `ASSETS` de `download_data.py`; si son de otro tipo, añadir un nuevo
-valor de `market` (p. ej. "materias primas").
+Decisiones sobre las fuentes:
+- Oro y plata: ETF **GLD** y **SLV** (compran el metal físico) en vez de los
+  futuros `GC=F`/`SI=F`, que en Yahoo tienen cientos de días sin datos. El
+  precio mostrado es el de una participación del fondo, no el de una onza.
+- Petróleo: **Brent** (`BZ=F`) y no WTI, que cotizó en negativo en abril de
+  2020 y rompería la normalización a 100.
+- El script avisa de movimientos diarios de más del 30 % para revisar a mano
+  si son reales (crash COVID, FTX...) o errores (p. ej. *splits* sin ajustar).
+
+Para añadir más activos (p. ej. emergentes) basta con añadirlos a `ASSETS`; si
+son de un tipo nuevo, añadir también su `market` a `MARKET_NAMES` en `main.js`.
 
 El script debe: descargar, limpiar huecos y valores nulos, y guardar en el
 formato del apartado 5. Mínimo 5 años de datos diarios por activo.
@@ -144,11 +161,10 @@ pública con fines comerciales, revisar licencias.
 - [ ] **Fase 6+** – Ideas futuras (no empezar sin pedirlo):
   - Elegir mercado y temporalidad. (Hecho: elegir un activo concreto y las
     velas reveladas. Pendiente: temporalidad 1h/4h/semanal.)
-  - Estadísticas separadas por número de velas reveladas (ahora van juntas).
   - Modo "cuánto sube": el usuario estima el % de variación.
   - Indicadores opcionales (medias móviles, RSI) para ver si ayudan.
   - Cuentas de usuario y ranking (Supabase).
-  - Más activos y mercados: oro y materias primas, más índices y divisas (ver apartado 6).
+  - Más activos: bolsas emergentes (pendiente; el resto de la ampliación está hecha).
   - **Noticias del periodo tras responder** (objetivo: pasar de "juego" a
     herramienta educativa). Solo se muestra *después* de responder, porque antes
     delataría el activo. Se hace por fases:

@@ -9,7 +9,7 @@ import { pickRandomRound, loadAssetList } from "./data.js";
 import { createCandleChart, drawCandles, revealCandles } from "./chart.js";
 import { loadStats, recordResult, resetStats, coinProbabilityAtLeast } from "./stats.js";
 import { loadContext, describeFed, eventsInRange, newsSearchUrl } from "./context.js";
-import { loadSettings, saveSettings } from "./settings.js";
+import { loadSettings, saveSettings, REVEAL_OPTIONS } from "./settings.js";
 
 // Racha a partir de la cual aparece el fuego 🔥
 const FIRE_STREAK = 5;
@@ -24,7 +24,7 @@ const BIG_MOVE_PCT = 10;
 const TIE_THRESHOLD_PCT = 0.1;
 
 // Nombres de los mercados para mostrarlos al usuario
-const MARKET_NAMES = { crypto: "Crypto", bolsa: "Bolsa", forex: "FOREX" };
+const MARKET_NAMES = { bolsa: "Bolsa", forex: "FOREX", crypto: "Crypto", materias: "Materias primas" };
 
 // Elementos de la página que vamos a usar
 const message = document.getElementById("message");
@@ -55,7 +55,9 @@ const statPct = document.getElementById("stat-pct");
 const statStreak = document.getElementById("stat-streak");
 const statBest = document.getElementById("stat-best");
 const statChance = document.getElementById("stat-chance");
-const statMarkets = document.getElementById("stat-markets");
+const breakdownTabs = document.getElementById("breakdown-tabs");
+const breakdownColumn = document.getElementById("breakdown-column");
+const statBreakdown = document.getElementById("stat-breakdown");
 const statTies = document.getElementById("stat-ties");
 const resetButton = document.getElementById("reset-stats");
 
@@ -73,6 +75,13 @@ let contextReady = false;
 
 // Estadísticas y ajustes guardados en el navegador
 let stats = loadStats();
+
+// Cómo se agrupa la tabla de detalle: "byMarket", "byHorizon" o "byAsset"
+let breakdownGroup = "byMarket";
+
+// Nombre de cada activo por su ticker ("GOLD" → "Oro (fondo GLD)"),
+// para la tabla por activo. Lo rellena fillAssetSelect().
+const assetNames = {};
 const settings = loadSettings();
 
 createCandleChart(document.getElementById("chart"));
@@ -164,7 +173,7 @@ function answer(guess) {
 
   const { outcome, changePct } = evaluateGuess(round, guess);
   const previousBest = stats.bestStreak; // para detectar un récord nuevo
-  recordResult(stats, round.market, outcome);
+  recordResult(stats, round, outcome);
   renderStats();
   renderBadges(outcome, changePct, previousBest);
 
@@ -337,20 +346,73 @@ function renderStats() {
   statBest.textContent = stats.bestStreak;
   statChance.textContent = chanceSentence(stats.correct, stats.played);
 
-  // Una fila de la tabla por mercado
-  statMarkets.innerHTML = "";
-  for (const market of Object.keys(MARKET_NAMES)) {
-    const { played, correct } = stats.byMarket[market];
-    const row = document.createElement("tr");
-    for (const text of [MARKET_NAMES[market], played, correct, hitRate(correct, played)]) {
-      const cell = document.createElement("td");
-      cell.textContent = text;
-      row.appendChild(cell);
-    }
-    statMarkets.appendChild(row);
-  }
+  renderBreakdown();
 
   statTies.textContent = stats.ties > 0 ? `Empates (no cuentan): ${stats.ties}` : "";
+}
+
+// Filas de la tabla de detalle según la pestaña elegida.
+// Devuelve una lista de [etiqueta, { played, correct }].
+function breakdownRows() {
+  const group = stats[breakdownGroup];
+  const entry = (key) => group[key] || { played: 0, correct: 0 };
+
+  if (breakdownGroup === "byMarket") {
+    // Todos los mercados, aunque aún no se hayan jugado
+    return Object.keys(MARKET_NAMES).map((market) => [MARKET_NAMES[market], entry(market)]);
+  }
+  if (breakdownGroup === "byHorizon") {
+    const labels = { 10: "10 velas (corto plazo)", 50: "50 velas (largo plazo)" };
+    return REVEAL_OPTIONS.map((n) => [labels[n] || `${n} velas`, entry(String(n))]);
+  }
+  // byAsset: solo los activos jugados, de más a menos rondas
+  return Object.keys(group)
+    .sort((a, b) => group[b].played - group[a].played)
+    .map((ticker) => [assetNames[ticker] || ticker, group[ticker]]);
+}
+
+// "Moneda*": probabilidad de que una moneda lo haga igual de bien o mejor
+function coinCell(correct, played) {
+  if (played === 0) {
+    return "–";
+  }
+  const probability = coinProbabilityAtLeast(correct, played);
+  return probability < 0.01 ? "< 1 %" : formatPct(Math.round(probability * 100));
+}
+
+// Rellena la tabla de detalle y marca la pestaña elegida
+function renderBreakdown() {
+  for (const button of breakdownTabs.querySelectorAll("button")) {
+    const isActive = button.dataset.group === breakdownGroup;
+    button.classList.toggle("active", isActive);
+    button.setAttribute("aria-pressed", isActive);
+  }
+  breakdownColumn.textContent = { byMarket: "Mercado", byHorizon: "Plazo", byAsset: "Activo" }[breakdownGroup];
+
+  statBreakdown.innerHTML = "";
+  const rows = breakdownRows();
+  if (rows.length === 0) {
+    const row = document.createElement("tr");
+    const cell = element("td", "empty", "Aún no hay rondas apuntadas por activo.");
+    cell.colSpan = 5; // la celda ocupa las 5 columnas
+    row.appendChild(cell);
+    statBreakdown.appendChild(row);
+  }
+  for (const [label, { played, correct }] of rows) {
+    const row = document.createElement("tr");
+    for (const text of [label, played, correct, hitRate(correct, played), coinCell(correct, played)]) {
+      row.appendChild(element("td", "", text));
+    }
+    statBreakdown.appendChild(row);
+  }
+}
+
+function onBreakdownTabClick(event) {
+  const button = event.target.closest("button");
+  if (button !== null) {
+    breakdownGroup = button.dataset.group;
+    renderBreakdown();
+  }
 }
 
 function onResetStats() {
@@ -391,15 +453,23 @@ function onRevealOptionClick(event) {
   }
 }
 
-// Rellena el desplegable con los activos de data/index.json
+// Rellena el desplegable con los activos de data/index.json, agrupados por
+// mercado (<optgroup>), y guarda sus nombres para la tabla de estadísticas
 async function fillAssetSelect() {
   const assets = await loadAssetList();
-  for (const asset of assets) {
-    const option = document.createElement("option");
-    option.value = asset.ticker;
-    option.textContent = `${asset.name} (${MARKET_NAMES[asset.market]})`;
-    assetSelect.appendChild(option);
+  for (const market of Object.keys(MARKET_NAMES)) {
+    const group = document.createElement("optgroup");
+    group.label = MARKET_NAMES[market];
+    for (const asset of assets.filter((a) => a.market === market)) {
+      const option = document.createElement("option");
+      option.value = asset.ticker;
+      option.textContent = asset.name;
+      group.appendChild(option);
+      assetNames[asset.ticker] = asset.name;
+    }
+    assetSelect.appendChild(group);
   }
+  renderStats(); // ahora la tabla "por activo" ya puede mostrar los nombres
   // Si el activo guardado ya no existe, volver a "Aleatorio"
   if (!assets.some((asset) => asset.ticker === settings.ticker)) {
     settings.ticker = "";
@@ -440,6 +510,7 @@ downButton.addEventListener("click", () => answer("down"));
 nextButton.addEventListener("click", newRound);
 resetButton.addEventListener("click", onResetStats);
 revealOptions.addEventListener("click", onRevealOptionClick);
+breakdownTabs.addEventListener("click", onBreakdownTabClick);
 assetSelect.addEventListener("change", () => changeSetting("ticker", assetSelect.value));
 document.addEventListener("keydown", onKeyDown);
 

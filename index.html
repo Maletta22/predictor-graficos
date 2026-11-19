@@ -126,12 +126,34 @@
 
       <p id="stat-chance" class="chance"></p>
 
-      <table>
-        <thead>
-          <tr><th>Mercado</th><th>Rondas</th><th>Aciertos</th><th>% acierto</th></tr>
-        </thead>
-        <tbody id="stat-markets"></tbody>
-      </table>
+      <!-- Detalle de las estadísticas: el usuario elige cómo agruparlas -->
+      <div class="breakdown-header">
+        <h3>Detalle por</h3>
+        <div id="breakdown-tabs" class="segmented">
+          <button data-group="byMarket">Mercado</button>
+          <button data-group="byHorizon">Plazo</button>
+          <button data-group="byAsset">Activo</button>
+        </div>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th id="breakdown-column">Mercado</th>
+              <th>Rondas</th>
+              <th>Aciertos</th>
+              <th>% acierto</th>
+              <th title="Probabilidad de que una moneda lo haga igual de bien o mejor con las mismas rondas">Moneda*</th>
+            </tr>
+          </thead>
+          <tbody id="stat-breakdown"></tbody>
+        </table>
+      </div>
+      <p class="table-note">
+        * Probabilidad de que una moneda lo haga igual de bien o mejor con esas
+        mismas rondas. Con pocas rondas por grupo, los porcentajes cambian mucho:
+        no saques conclusiones con menos de unas 30.
+      </p>
 
       <p class="stats-footer">
         <span id="stat-ties"></span>

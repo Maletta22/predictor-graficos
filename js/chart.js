@@ -8,13 +8,13 @@
 // seguidas como en cualquier gráfico. Cierres excepcionales (p. ej. tras el
 // 11-S): dejan un hueco vacío por cada día laborable sin cotizar.
 
-import { daysBetween } from "./data.js";
-
 const SECONDS_PER_DAY = 24 * 60 * 60;
 
-// Más de 4 días naturales entre dos velas = cierre excepcional.
-// (Un fin de semana largo con festivo dura como máximo 4: de jueves a lunes.)
-const EXCEPTIONAL_GAP_DAYS = 4;
+// 4 o más días LABORABLES sin cotizar entre dos velas = cierre excepcional
+// (el 11-S fueron 4). Los festivos normales dejan como mucho 3 (Navidad en
+// Europa, Golden Week en Japón), salvo el Año Nuevo japonés, que cierra 4 y
+// por eso se excluye aparte (ver isNewYearClosure).
+const EXCEPTIONAL_CLOSED_WEEKDAYS = 4;
 
 // Ancho mínimo de cada vela en píxeles, para que siempre se vea su cuerpo
 const MIN_BAR_SPACING = 7;
@@ -120,6 +120,11 @@ function countWeekdaysBetween(dateA, dateB) {
   return count;
 }
 
+// ¿El cierre abarca el cambio de año? (cierre de Año Nuevo: normal, no excepcional)
+function isNewYearClosure(dateA, dateB) {
+  return dateA.slice(0, 4) !== dateB.slice(0, 4); // "2012-12-28" → "2012"
+}
+
 // Prepara las velas para la librería: cada vela ocupa la siguiente posición
 // del eje, salvo tras un cierre excepcional, donde se dejan huecos vacíos.
 // Las velas a partir de "revealFrom" se pintan con colores claros.
@@ -133,10 +138,10 @@ export function toChartData(candles, revealFrom = candles.length) {
 
     if (i > 0) {
       const previous = candles[i - 1];
-      if (daysBetween(previous.t, candle.t) > EXCEPTIONAL_GAP_DAYS) {
+      const closedDays = countWeekdaysBetween(previous.t, candle.t);
+      if (closedDays >= EXCEPTIONAL_CLOSED_WEEKDAYS && !isNewYearClosure(previous.t, candle.t)) {
         // Cierre excepcional: un hueco por cada día laborable sin cotizar.
         // Un punto con solo "time" es un hueco vacío para la librería.
-        const closedDays = countWeekdaysBetween(previous.t, candle.t);
         for (let k = 0; k < closedDays; k++) {
           data.push({ time: dayToTime(position) });
           position++;
