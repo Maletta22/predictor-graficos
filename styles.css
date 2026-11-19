@@ -8,7 +8,7 @@ body {
 }
 
 main {
-  max-width: 900px;
+  max-width: 1100px;
   margin: 0 auto;
   padding: 16px;
 }
@@ -22,8 +22,24 @@ h1 {
   color: #666;
 }
 
+/* Zona de juego: dos columnas (gráfico | panel lateral de 280 px) */
+.game {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 16px;
+  align-items: start;
+}
+
+/* En pantallas estrechas (móvil), una sola columna: el panel va debajo */
+@media (max-width: 760px) {
+  .game {
+    grid-template-columns: 1fr;
+  }
+}
+
 #chart {
   width: 100%;
+  min-width: 0; /* deja que el gráfico encoja dentro de la rejilla */
   height: 420px;
   background: #fff;
   border: 1px solid #ddd;
@@ -65,15 +81,23 @@ button.up:hover {
 
 button.down {
   background: #ef5350;
-  margin-left: 8px;
+}
+
+.buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.buttons button {
+  flex: 1; /* los dos botones del mismo ancho */
 }
 
 button.down:hover {
   background: #d9403d;
 }
 
-/* Caja del resultado */
-.result {
+/* Cajas blancas del panel lateral y de las estadísticas */
+.panel {
   padding: 4px 16px 16px;
   background: #fff;
   border: 1px solid #ddd;
@@ -83,6 +107,22 @@ button.down:hover {
 .result-title {
   font-size: 1.4rem;
   font-weight: bold;
+  margin-bottom: 4px;
+}
+
+/* Lista "etiqueta: valor" del resultado */
+dl {
+  margin: 12px 0 16px;
+}
+
+dt {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+dd {
+  margin: 0 0 8px;
+  font-weight: 500;
 }
 
 .result-title.correct {
@@ -95,6 +135,67 @@ button.down:hover {
 
 .result-title.tie {
   color: #666;
+}
+
+/* Estadísticas */
+.stats h2 {
+  font-size: 1.1rem;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 8px;
+  color: #666;
+  font-size: 0.85rem;
+}
+
+.stat-value {
+  display: block;
+  font-size: 1.6rem;
+  font-weight: bold;
+  color: #222;
+}
+
+.chance {
+  margin: 16px 0;
+  padding: 12px;
+  background: #f0f4ff;
+  border-radius: 6px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 6px 4px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.stats-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #666;
+  font-size: 0.85rem;
+}
+
+/* Botón con aspecto de enlace (para acciones secundarias) */
+button.link {
+  padding: 0;
+  background: none;
+  color: #2962ff;
+  font-size: 0.85rem;
+  text-decoration: underline;
+}
+
+button.link:hover {
+  background: none;
+  color: #1e4bd8;
 }
 
 /* Clase para ocultar elementos desde JavaScript */

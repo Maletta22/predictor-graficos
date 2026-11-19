@@ -71,6 +71,8 @@ function normalize(candles, base) {
 // Elige un activo y un fragmento al azar. Devuelve:
 //   visible: las 60 velas que ve el usuario (normalizadas)
 //   hidden:  las 20 velas siguientes, para revelar después (Fase 3)
+//   decisionPrice / finalPrice: precios REALES de cierre al decidir y
+//     20 velas después (solo se muestran tras responder)
 //   y los datos del activo (nombre, mercado...), que NO se muestran aún.
 export async function pickRandomRound() {
   const list = await loadAssetList();
@@ -101,6 +103,8 @@ export async function pickRandomRound() {
       market: asset.market,
       visible: normalize(visible, base),
       hidden: normalize(hidden, base),
+      decisionPrice: base,
+      finalPrice: hidden[hidden.length - 1].c,
     };
   }
 

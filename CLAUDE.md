@@ -46,7 +46,9 @@ consistente es muy difícil y comparar su resultado con el azar (50 %).
 - El activo y las fechas **no se muestran** hasta después de responder.
 - El eje de precios se **normaliza** (la última vela visible vale 100) para que
   no se pueda reconocer el activo por su precio.
-- Tras revelar: mostrar acierto/fallo, variación en %, activo y fechas reales.
+- Tras revelar: mostrar acierto/fallo, variación en %, activo, fechas reales y
+  precios reales (al decidir y 20 velas después), en un panel lateral junto
+  al gráfico (debajo en móvil).
 
 ## 4. Estadísticas (v1)
 
@@ -119,7 +121,7 @@ pública con fines comerciales, revisar licencias.
 - [x] **Fase 1** – `download_data.py` funcionando con 3 activos de prueba.
 - [x] **Fase 2** – Mostrar un fragmento aleatorio con Lightweight Charts.
 - [x] **Fase 3** – Botones Sube/Baja, revelar continuación, acierto/fallo.
-- [ ] **Fase 4** – Estadísticas, rachas y comparación con el azar.
+- [x] **Fase 4** – Estadísticas, rachas y comparación con el azar.
 - [ ] **Fase 5** – Diseño cuidado, móvil, publicar en GitHub Pages.
 - [ ] **Fase 6+** – Ideas futuras (no empezar sin pedirlo):
   - Elegir mercado y temporalidad.

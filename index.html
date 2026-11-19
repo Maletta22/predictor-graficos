@@ -16,25 +16,68 @@
       La última vela vale 100.
     </p>
 
-    <!-- Aquí dibuja chart.js el gráfico -->
-    <div id="chart"></div>
+    <!-- Zona de juego: gráfico a la izquierda, panel lateral a la derecha
+         (en pantallas estrechas, el panel pasa debajo del gráfico) -->
+    <div class="game">
+      <!-- Aquí dibuja chart.js el gráfico -->
+      <div id="chart"></div>
+
+      <aside class="side">
+        <!-- Paso 1: el usuario decide -->
+        <div id="choice" class="panel">
+          <p>¿Qué hará el precio en las próximas 20 velas?</p>
+          <div class="buttons">
+            <button id="guess-up" class="up">▲ Sube</button>
+            <button id="guess-down" class="down">▼ Baja</button>
+          </div>
+        </div>
+
+        <!-- Paso 2: se revela el resultado (oculto hasta que el usuario responde) -->
+        <div id="result" class="panel hidden">
+          <p id="result-title" class="result-title"></p>
+          <p id="result-change"></p>
+          <dl>
+            <dt>Activo</dt>
+            <dd id="result-asset"></dd>
+            <dt>Fechas</dt>
+            <dd id="result-dates"></dd>
+            <dt>Precio al decidir</dt>
+            <dd id="result-price-start"></dd>
+            <dt>Precio 20 velas después</dt>
+            <dd id="result-price-end"></dd>
+          </dl>
+          <button id="next-round">Siguiente gráfico</button>
+        </div>
+      </aside>
+    </div>
 
     <p id="message" class="message"></p>
 
-    <!-- Paso 1: el usuario decide -->
-    <div id="choice" class="choice">
-      <p>¿Qué hará el precio en las próximas 20 velas?</p>
-      <button id="guess-up" class="up">▲ Sube</button>
-      <button id="guess-down" class="down">▼ Baja</button>
-    </div>
+    <!-- Estadísticas del jugador (las rellena main.js) -->
+    <section class="panel stats">
+      <h2>Tus estadísticas</h2>
+      <div class="stats-grid">
+        <div><span id="stat-played" class="stat-value"></span>rondas</div>
+        <div><span id="stat-correct" class="stat-value"></span>aciertos</div>
+        <div><span id="stat-pct" class="stat-value"></span>de acierto</div>
+        <div><span id="stat-streak" class="stat-value"></span>racha actual</div>
+        <div><span id="stat-best" class="stat-value"></span>mejor racha</div>
+      </div>
 
-    <!-- Paso 2: se revela el resultado (oculto hasta que el usuario responde) -->
-    <div id="result" class="result hidden">
-      <p id="result-title" class="result-title"></p>
-      <p id="result-change"></p>
-      <p id="result-asset"></p>
-      <button id="next-round">Siguiente gráfico</button>
-    </div>
+      <p id="stat-chance" class="chance"></p>
+
+      <table>
+        <thead>
+          <tr><th>Mercado</th><th>Rondas</th><th>Aciertos</th><th>% acierto</th></tr>
+        </thead>
+        <tbody id="stat-markets"></tbody>
+      </table>
+
+      <p class="stats-footer">
+        <span id="stat-ties"></span>
+        <button id="reset-stats" class="link">Borrar estadísticas</button>
+      </p>
+    </section>
   </main>
 
   <!-- type="module" permite usar import/export entre nuestros archivos JS -->
