@@ -10,14 +10,33 @@ const MAX_TRIES = 50;                // intentos antes de rendirse
 let assetList = null;
 const assetCache = {};
 
+const MAX_ATTEMPTS = 3; // intentos de descarga antes de dar error
+
+// Espera "ms" milisegundos
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 // Descarga un archivo JSON y lo convierte en un objeto de JavaScript.
+// Si la conexión se corta (p. ej. mala cobertura en el móvil), lo reintenta
+// hasta MAX_ATTEMPTS veces, esperando un poco más cada vez.
 // Se exporta porque context.js también la usa.
 export async function loadJson(path) {
-  const response = await fetch(path);
-  if (!response.ok) {
-    throw new Error(`No se pudo cargar ${path} (error ${response.status})`);
+  let lastError = null;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    try {
+      const response = await fetch(path);
+      if (!response.ok) {
+        throw new Error(`No se pudo cargar ${path} (error ${response.status})`);
+      }
+      return await response.json();
+    } catch (error) {
+      lastError = error;
+      console.warn(`Intento ${attempt} de ${MAX_ATTEMPTS} fallido para ${path}:`, error.message);
+      await wait(300 * attempt); // 0,3 s, 0,6 s...
+    }
   }
-  return response.json();
+  throw lastError;
 }
 
 // Lista de activos disponibles (data/index.json).

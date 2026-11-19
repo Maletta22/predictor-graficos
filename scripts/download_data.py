@@ -6,7 +6,8 @@ Se ejecuta a mano, desde la carpeta del proyecto:
 
 Para cada activo crea data/<ticker>.json con el formato del CLAUDE.md, y al
 final crea data/index.json con la lista de activos disponibles y
-data/fed_funds.json con el histórico de tipos de interés de la FED.
+data/fed_funds.json y data/ecb_rate.json con el histórico de tipos de
+interés de la FED y del BCE.
 """
 
 import json
@@ -174,32 +175,45 @@ def download_yahoo(symbol):
 # Tipos de interés de la FED (FRED, Reserva Federal de San Luis)
 # ---------------------------------------------------------------------------
 
-# FEDFUNDS = tipo de interés efectivo de los fondos federales, media mensual.
-# Es público y no necesita cuenta. Formato CSV: "observation_date,FEDFUNDS".
-FRED_URL = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=FEDFUNDS"
+# Series de FRED (Reserva Federal de San Luis): públicas, sin cuenta.
+# Formato CSV: "observation_date,SERIE" y una fila por fecha.
+#   FEDFUNDS: tipo efectivo de la FED, ya viene con un dato por mes (media).
+#   ECBDFR: tipo de la facilidad de depósito del BCE (su tipo de referencia),
+#           viene con un dato por DÍA; nos quedamos con el último de cada mes.
+FRED_SERIES = [
+    {"series": "FEDFUNDS", "file": "fed_funds.json",
+     "name": "Tipo de interés efectivo de la FED (media mensual, %)"},
+    {"series": "ECBDFR", "file": "ecb_rate.json",
+     "name": "Tipo de la facilidad de depósito del BCE (fin de mes, %)"},
+]
 
 
-def download_fed_funds():
-    """Descarga el histórico mensual de tipos de la FED y lo guarda en data/."""
-    print("Descargando tipos de la FED (FRED, FEDFUNDS)...")
-    response = requests.get(FRED_URL, timeout=30, verify=SSL_VERIFY)
+def download_fred_series(series, file, name):
+    """Descarga una serie de tipos de interés de FRED y la guarda en data/
+    con un valor por mes, con fechas "AAAA-MM-01"."""
+    print(f"Descargando {name} (FRED, {series})...")
+    url = f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={series}"
+    response = requests.get(url, timeout=30, verify=SSL_VERIFY)
     response.raise_for_status()
 
-    values = []
+    # Diccionario mes → valor. Si hay varios datos en un mes (serie diaria),
+    # cada uno sobrescribe al anterior y queda el último del mes.
+    by_month = {}
     lines = response.text.strip().splitlines()
     for line in lines[1:]:  # la primera línea es la cabecera
         date, rate = line.split(",")
-        if rate == ".":  # FRED usa "." para los meses sin dato
+        if rate == ".":  # FRED usa "." para las fechas sin dato
             continue
-        values.append({"t": date, "v": float(rate)})
+        by_month[f"{date[:7]}-01"] = float(rate)  # "1999-01-15" → "1999-01-01"
 
+    values = [{"t": month, "v": by_month[month]} for month in sorted(by_month)]
     output = {
-        "series": "FEDFUNDS",
-        "name": "Tipo de interés efectivo de la FED (media mensual, %)",
-        "source": "https://fred.stlouisfed.org/series/FEDFUNDS",
+        "series": series,
+        "name": name,
+        "source": f"https://fred.stlouisfed.org/series/{series}",
         "values": values,
     }
-    path = DATA_DIR / "fed_funds.json"
+    path = DATA_DIR / file
     path.write_text(json.dumps(output, ensure_ascii=False, separators=(",", ":")),
                     encoding="utf-8")
     print(f"  {len(values)} meses, de {values[0]['t']} a {values[-1]['t']}")
@@ -332,7 +346,8 @@ def main():
     print(f"Listo. {len(index)} activos guardados en {DATA_DIR}")
 
     # Contexto macroeconómico que se muestra tras cada ronda
-    download_fed_funds()
+    for fred in FRED_SERIES:
+        download_fred_series(fred["series"], fred["file"], fred["name"])
 
 
 if __name__ == "__main__":

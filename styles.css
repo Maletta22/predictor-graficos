@@ -822,6 +822,69 @@ th {
 }
 
 /* =========================================================================
+   Ranking (js/online.js)
+   ========================================================================= */
+
+.ranking {
+  margin-top: 16px;
+}
+
+.ranking-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ranking-header h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.join-form {
+  display: flex;
+  gap: 8px;
+}
+
+.join-form input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+}
+
+button.primary-inline {
+  padding: 8px 18px;
+  background: var(--accent);
+}
+
+button.primary-inline:hover {
+  background: var(--accent-hover);
+}
+
+.ranking-me {
+  margin: 12px 0;
+}
+
+.ranking-me:empty {
+  display: none;
+}
+
+/* Tu fila en el ranking, resaltada */
+tr.me td {
+  background: var(--info-bg);
+  font-weight: 600;
+}
+
+/* Medallas para los tres primeros */
+td.position {
+  width: 2.5em;
+}
+
+/* =========================================================================
    Pie de página
    ========================================================================= */
 

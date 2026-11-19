@@ -108,11 +108,14 @@ consistente es muy difícil y comparar su resultado con el azar (50 %).
 │   ├── ticker.js       # cinta decorativa con los activos (sin precios inventados)
 │   ├── confetti.js     # confeti al batir la mejor racha
 │   ├── sounds.js       # sonidos sintetizados (Web Audio, sin archivos)
-│   └── context.js      # contexto tras revelar: FED, eventos, enlace a noticias
+│   ├── context.js      # contexto tras revelar: FED, BCE, eventos, enlace a noticias
+│   ├── online.js       # cuentas por apodo y ranking (Supabase)
+│   └── config.js       # URL y clave pública de Supabase (vacías = sin ranking)
 ├── data/
 │   ├── index.json      # lista de activos disponibles y su mercado
 │   ├── <ticker>.json   # velas OHLC de cada activo
 │   ├── fed_funds.json  # tipos de la FED, media mensual (FRED, lo genera el script)
+│   ├── ecb_rate.json   # tipo de depósito del BCE, fin de mes (FRED, lo genera el script)
 │   └── events.json     # grandes eventos, escrito A MANO (fecha, mercados, título, texto)
 └── scripts/
     ├── download_data.py  # descarga y prepara los datos (se ejecuta a mano)
@@ -143,6 +146,7 @@ consistente es muy difícil y comparar su resultado con el azar (50 %).
 | Bolsa (índices y acciones) | Yahoo Finance | Python + `yfinance` |
 | FOREX | Yahoo Finance (`EURUSD=X`, etc.) | Python + `yfinance` |
 | Tipos de la FED | FRED (serie `FEDFUNDS`, pública, sin cuenta) | Python + `requests` |
+| Tipos del BCE | FRED (serie `ECBDFR`, facilidad de depósito, desde 1999) | Python + `requests` |
 
 Activos incluidos (20), en la lista `ASSETS` de `download_data.py`:
 - **Crypto**: Bitcoin, Ethereum, Solana.
@@ -185,7 +189,24 @@ pública con fines comerciales, revisar licencias.
     velas reveladas. Pendiente: temporalidad 1h/4h/semanal.)
   - Modo "cuánto sube": el usuario estima el % de variación.
   - Indicadores opcionales (medias móviles, RSI) para ver si ayudan.
-  - Cuentas de usuario y ranking (Supabase).
+  - [x] **Cuentas y ranking (Supabase)**. Programado; se activa al rellenar
+    `js/config.js` tras crear el proyecto y ejecutar `supabase/setup.sql`.
+    Decisiones:
+    - Cuenta = usuario **anónimo** de Supabase + **apodo** (sin email ni
+      contraseña). Queda ligada al navegador: si se borran sus datos, se pierde.
+      Hay que activar "Allow anonymous sign-ins" en Supabase.
+    - Ranking ordenado por **menor probabilidad de suerte** (`luck_prob`, test
+      binomial), con mínimo 30 rondas. Top 20 + tu posición.
+    - Las estadísticas siguen guardándose en el navegador; tras cada ronda se
+      suben a la tabla `players`. Reglas de seguridad (RLS): todos leen, cada
+      uno solo escribe su fila.
+    - Limitación conocida: el juego corre en el navegador, así que alguien con
+      conocimientos podría subir estadísticas falsas. Evitarlo exigiría un
+      servidor que lleve la partida. Aceptado para un juego educativo.
+    - Librería `@supabase/supabase-js@2.118.0` desde CDN, que solo se carga si
+      `config.js` está relleno.
+  - [x] Tipos del BCE en el contexto de los activos europeos o con euro
+    (EUR/USD, EUR/GBP, Euro Stoxx 50, DAX, IBEX 35, Santander).
   - Más activos: bolsas emergentes (pendiente; el resto de la ampliación está hecha).
   - **Noticias del periodo tras responder** (objetivo: pasar de "juego" a
     herramienta educativa). Solo se muestra *después* de responder, porque antes
@@ -201,7 +222,7 @@ pública con fines comerciales, revisar licencias.
       script (LLM con búsqueda web) y guardarlos en `data/`. Como los fragmentos
       son aleatorios, un resumen **por activo y mes** (~1.000 en total).
       Requiere cuenta de API de pago: preguntar y calcular el coste antes.
-    - Idea relacionada: tipos del BCE para las rondas de EUR/USD.
+    - Tipos del BCE: hecho (ver más abajo).
 
 ## 8. Convenciones
 

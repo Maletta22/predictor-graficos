@@ -8,13 +8,17 @@
 import { pickRandomRound, loadAssetList } from "./data.js";
 import { createCandleChart, drawCandles, revealCandles } from "./chart.js";
 import { loadStats, recordResult, resetStats, coinProbabilityAtLeast } from "./stats.js";
-import { loadContext, describeFed, eventsInRange, newsSearchUrl } from "./context.js";
+import { loadContext, describeRates, isEcbRelevant, eventsInRange, newsSearchUrl } from "./context.js";
 import { loadSettings, saveSettings, REVEAL_OPTIONS } from "./settings.js";
 import { createLogo } from "./logos.js";
 import { drawBackdrop } from "./backdrop.js";
 import { launchConfetti } from "./confetti.js";
 import { playSound, setSoundEnabled } from "./sounds.js";
 import { fillTicker } from "./ticker.js";
+import {
+  isOnlineConfigured, initOnline, currentPlayer, nicknameError, joinRanking,
+  syncStats, fetchRanking, fetchMyPosition, RANKING_MIN_ROUNDS,
+} from "./online.js";
 
 // Racha a partir de la cual aparece el fuego 🔥
 const FIRE_STREAK = 5;
@@ -58,6 +62,19 @@ const assetSelect = document.getElementById("asset-select");
 const settingsNote = document.getElementById("settings-note");
 const soundToggle = document.getElementById("sound-toggle");
 const tickerTrack = document.getElementById("ticker-track");
+
+// Elementos del ranking
+const rankingBox = document.getElementById("ranking");
+const rankingJoin = document.getElementById("ranking-join");
+const joinForm = document.getElementById("join-form");
+const nicknameInput = document.getElementById("nickname-input");
+const joinError = document.getElementById("join-error");
+const rankingMe = document.getElementById("ranking-me");
+const rankingBody = document.getElementById("ranking-body");
+const rankingRefresh = document.getElementById("ranking-refresh");
+
+// ¿Está conectado Supabase? (si no, el ranking queda oculto)
+let onlineReady = false;
 
 // Elementos de las estadísticas
 const statPlayed = document.getElementById("stat-played");
@@ -198,6 +215,7 @@ async function answer(guess) {
 
   renderStats();
   renderBadges(outcome, changePct, previousBest);
+  syncAndRenderRanking(); // sube las estadísticas al ranking (si te has unido)
   playSound(outcome);
   if (stats.bestStreak > previousBest && stats.bestStreak >= NEW_RECORD_MIN) {
     launchConfetti(); // 🎉 nueva mejor racha
@@ -282,6 +300,21 @@ function element(tag, className, text) {
   return el;
 }
 
+// Frase sobre los tipos de un banco central ("fed" o "ecb") en esas fechas.
+//   ofBank: "de la FED" o "del BCE" (para que la frase quede bien en español)
+function rateSentence(bank, ofBank, firstDate, lastDate) {
+  const rates = describeRates(bank, firstDate, lastDate);
+  if (rates === null && bank === "ecb") {
+    return "Aún no existían los tipos del BCE (el euro y el BCE empezaron en 1999).";
+  }
+  if (rates === null) {
+    return `No hay datos de tipos ${ofBank} para estas fechas.`;
+  }
+  const trendText = { up: "subieron", down: "bajaron", flat: "se mantuvieron estables" }[rates.trend];
+  return `Tipos de interés ${ofBank}: ${formatRate(rates.start)} al inicio del gráfico ` +
+    `y ${formatRate(rates.end)} al final (${trendText}).`;
+}
+
 function renderContext(round) {
   if (!contextReady) {
     return; // sin datos de contexto, el juego sigue funcionando sin la tarjeta
@@ -290,16 +323,12 @@ function renderContext(round) {
   const decisionDate = round.visible[round.visible.length - 1].t;
   const lastDate = round.hidden[round.hidden.length - 1].t;
 
-  // 1. Tipos de la FED
-  const fed = describeFed(firstDate, lastDate);
-  if (fed === null) {
-    contextFed.textContent = "No hay datos de tipos de la FED para estas fechas.";
-  } else {
-    const trendText = { up: "subieron", down: "bajaron", flat: "se mantuvieron estables" }[fed.trend];
-    contextFed.textContent =
-      `Tipos de interés de la FED: ${formatRate(fed.start)} al inicio del gráfico ` +
-      `y ${formatRate(fed.end)} al final (${trendText}).`;
+  // 1. Tipos de interés: la FED siempre; el BCE en activos europeos o con euro
+  const lines = [rateSentence("fed", "de la FED", firstDate, lastDate)];
+  if (isEcbRelevant(round.ticker)) {
+    lines.push(rateSentence("ecb", "del BCE", firstDate, lastDate));
   }
+  contextFed.textContent = lines.join(" ");
 
   // 2. Grandes eventos de esas fechas
   contextEvents.innerHTML = "";
@@ -461,6 +490,7 @@ function onResetStats() {
   // confirm() muestra una ventana de "Aceptar / Cancelar" del navegador
   if (confirm("¿Seguro que quieres borrar todas tus estadísticas?")) {
     stats = resetStats();
+    syncAndRenderRanking(); // en el ranking también vuelves a 0 rondas
     renderStats();
   }
 }
@@ -533,13 +563,117 @@ async function fillAssetSelect() {
 }
 
 // ---------------------------------------------------------------------------
+// Ranking online (js/online.js)
+// ---------------------------------------------------------------------------
+
+// Medallas para los tres primeros puestos
+const MEDALS = { 1: "🥇", 2: "🥈", 3: "🥉" };
+
+// Dibuja el ranking: formulario de apodo o tu situación, y la tabla
+async function renderRanking() {
+  if (!onlineReady) {
+    return;
+  }
+  const player = currentPlayer();
+  rankingJoin.classList.toggle("hidden", player !== null);
+
+  try {
+    // Tu situación
+    if (player === null) {
+      rankingMe.textContent = "";
+    } else if (stats.played < RANKING_MIN_ROUNDS) {
+      rankingMe.textContent =
+        `Juegas como ${player.nickname}. Te faltan ${RANKING_MIN_ROUNDS - stats.played} ` +
+        "rondas para aparecer en el ranking.";
+    } else {
+      const position = await fetchMyPosition(stats);
+      rankingMe.textContent = `Juegas como ${player.nickname}: vas en la posición ${position}.`;
+    }
+
+    // La tabla
+    const rows = await fetchRanking();
+    rankingBody.innerHTML = "";
+    if (rows.length === 0) {
+      const row = document.createElement("tr");
+      const cell = element("td", "empty", `Aún nadie ha llegado a ${RANKING_MIN_ROUNDS} rondas. ¡Sé el primero!`);
+      cell.colSpan = 5;
+      row.appendChild(cell);
+      rankingBody.appendChild(row);
+    }
+    rows.forEach((entry, i) => {
+      const position = i + 1;
+      const row = document.createElement("tr");
+      if (player !== null && entry.id === player.id) {
+        row.className = "me"; // resaltar tu fila
+      }
+      row.appendChild(element("td", "position", MEDALS[position] || position));
+      row.appendChild(element("td", "", entry.nickname));
+      row.appendChild(element("td", "", entry.played));
+      row.appendChild(element("td", "", hitRate(entry.correct, entry.played)));
+      row.appendChild(element("td", "", coinCell(entry.correct, entry.played)));
+      rankingBody.appendChild(row);
+    });
+  } catch (error) {
+    console.warn("No se pudo cargar el ranking:", error);
+    rankingMe.textContent = "No se pudo cargar el ranking. Prueba a actualizarlo en un rato.";
+  }
+}
+
+// Tras una ronda (o al borrar estadísticas): subir datos y redibujar
+async function syncAndRenderRanking() {
+  if (!onlineReady) {
+    return;
+  }
+  try {
+    await syncStats(stats);
+  } catch (error) {
+    console.warn("No se pudieron subir las estadísticas:", error);
+  }
+  renderRanking();
+}
+
+async function onJoinSubmit(event) {
+  event.preventDefault(); // que el formulario no recargue la página
+  const nickname = nicknameInput.value.trim();
+  const problem = nicknameError(nickname);
+  if (problem !== null) {
+    joinError.textContent = problem;
+    return;
+  }
+  joinError.textContent = "";
+  try {
+    await joinRanking(nickname, stats);
+    renderRanking();
+  } catch (error) {
+    joinError.textContent = error.message || "No se pudo crear la cuenta. Inténtalo de nuevo.";
+    console.warn(error);
+  }
+}
+
+// Conecta con Supabase al abrir la página (solo si config.js tiene los datos)
+async function startOnline() {
+  if (!isOnlineConfigured()) {
+    return; // sin configurar: el ranking queda oculto y el juego sigue igual
+  }
+  try {
+    await initOnline();
+    onlineReady = true;
+    rankingBox.classList.remove("hidden");
+    renderRanking();
+  } catch (error) {
+    console.warn("No se pudo conectar con Supabase:", error);
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Teclado
 // ---------------------------------------------------------------------------
 
 // Atajos de teclado: ↑ sube, ↓ baja, Enter siguiente gráfico
 function onKeyDown(event) {
   // En el desplegable, las flechas cambian la opción: no son atajos
-  if (event.target.tagName === "SELECT") {
+  // Tampoco al escribir en un campo de texto (el apodo del ranking)
+  if (event.target.tagName === "SELECT" || event.target.tagName === "INPUT") {
     return;
   }
   const choosing = !choiceBox.classList.contains("hidden") && !upButton.disabled;
@@ -567,6 +701,8 @@ resetButton.addEventListener("click", onResetStats);
 revealOptions.addEventListener("click", onRevealOptionClick);
 breakdownTabs.addEventListener("click", onBreakdownTabClick);
 soundToggle.addEventListener("click", onSoundToggle);
+joinForm.addEventListener("submit", onJoinSubmit);
+rankingRefresh.addEventListener("click", renderRanking);
 assetSelect.addEventListener("change", () => changeSetting("ticker", assetSelect.value));
 document.addEventListener("keydown", onKeyDown);
 
@@ -574,6 +710,8 @@ renderSettings();
 renderStats();
 fillAssetSelect().catch((error) => console.warn("No se pudo cargar la lista de activos:", error));
 newRound(); // primera ronda al abrir la página
+
+startOnline(); // ranking online, si está configurado
 
 // Datos de contexto en segundo plano. Si fallan, el juego sigue sin la tarjeta.
 loadContext()

@@ -176,6 +176,45 @@
       </p>
     </section>
 
+    <!-- Ranking online (js/online.js). Oculto si Supabase no está configurado -->
+    <section id="ranking" class="card panel ranking hidden">
+      <div class="ranking-header">
+        <h2>🏆 Ranking</h2>
+        <button id="ranking-refresh" class="link">Actualizar</button>
+      </div>
+
+      <!-- Formulario para elegir apodo (solo si aún no te has unido) -->
+      <div id="ranking-join" class="hidden">
+        <p>Elige un apodo para aparecer en el ranking. No hace falta email ni contraseña.</p>
+        <form id="join-form" class="join-form">
+          <input id="nickname-input" maxlength="20" placeholder="Tu apodo" autocomplete="nickname" aria-label="Tu apodo">
+          <button class="primary-inline">Unirme</button>
+        </form>
+        <p class="table-note">
+          Tu cuenta queda guardada en este navegador: si borras sus datos o
+          cambias de dispositivo, no podrás recuperarla.
+        </p>
+        <p id="join-error" class="message"></p>
+      </div>
+
+      <p id="ranking-me" class="ranking-me"></p>
+
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr><th>#</th><th>Apodo</th><th>Rondas</th><th>% acierto</th><th>Moneda*</th></tr>
+          </thead>
+          <tbody id="ranking-body"></tbody>
+        </table>
+      </div>
+      <p class="table-note">
+        * Ordenado por la probabilidad de que una moneda lo haga igual de bien o
+        mejor: cuanto menor, más difícil es atribuirlo a la suerte. Así cuentan
+        a la vez el % de acierto y el número de rondas. Hacen falta 30 rondas
+        para aparecer.
+      </p>
+    </section>
+
     <footer class="footer">
       <p>
         Datos diarios de Binance (crypto) y Yahoo Finance (bolsa y FOREX), con
