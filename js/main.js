@@ -5,7 +5,10 @@
 //      y se dice si acertó.
 //   4. "Siguiente gráfico" vuelve al paso 1.
 
-import { pickRandomRound, loadAssetList } from "./data.js";
+import {
+  pickRandomRound, loadAssetList, rangeFromYears, assetsForChoice, isAssetAvailable,
+  VISIBLE_CANDLES,
+} from "./data.js";
 import { createCandleChart, drawCandles, revealCandles } from "./chart.js";
 import { loadStats, recordResult, resetStats, coinProbabilityAtLeast } from "./stats.js";
 import {
@@ -61,6 +64,15 @@ const nextButton = document.getElementById("next-round");
 // Elementos de los ajustes
 const revealOptions = document.getElementById("reveal-options");
 const assetSelect = document.getElementById("asset-select");
+const fromYearSelect = document.getElementById("from-year");
+const toYearSelect = document.getElementById("to-year");
+const settingsWarning = document.getElementById("settings-warning");
+
+// Lista de activos (data/index.json), para los filtros. La rellena fillAssetSelect().
+let assetList = [];
+
+// ¿Están los filtros impidiendo jugar? (activo sin datos en esas fechas...)
+let blockedByFilters = false;
 const settingsNote = document.getElementById("settings-note");
 const soundToggle = document.getElementById("sound-toggle");
 const tickerTrack = document.getElementById("ticker-track");
@@ -181,8 +193,18 @@ async function newRound() {
   upButton.disabled = true; // desactivados hasta que el gráfico esté listo
   downButton.disabled = true;
 
+  // Si los filtros no dejan ningún activo con datos, no se puede jugar:
+  // el aviso de los ajustes explica por qué
+  const problem = filterProblem();
+  blockedByFilters = problem !== null && problem.blocking;
+  if (blockedByFilters) {
+    currentRound = null;
+    question.textContent = "Ajusta los filtros de arriba para poder jugar.";
+    return;
+  }
+
   try {
-    currentRound = await pickRandomRound(settings.revealCount, settings.ticker);
+    currentRound = await pickRandomRound(settings.revealCount, settings.ticker, currentRange());
     question.textContent =
       `¿Qué hará el precio en las próximas ${currentRound.hidden.length} velas?`;
     drawCandles(currentRound.visible);
@@ -500,8 +522,72 @@ function onResetStats() {
 }
 
 // ---------------------------------------------------------------------------
-// Ajustes: velas a revelar y activo
+// Ajustes: velas a revelar, activo y rango de fechas
 // ---------------------------------------------------------------------------
+
+// Rango de fechas elegido ({ from, to }, ver rangeFromYears en data.js)
+function currentRange() {
+  return rangeFromYears(settings.fromYear, settings.toYear);
+}
+
+// Velas que necesita una ronda (las visibles + las reveladas)
+function candlesNeeded() {
+  return VISIBLE_CANDLES + settings.revealCount;
+}
+
+// ¿Hay algún problema con la combinación de filtros?
+// Devuelve null si todo va bien, o { blocking, text }:
+//   blocking = true  → no se puede jugar (ningún activo tiene datos)
+//   blocking = false → se puede jugar, pero algunos activos quedan fuera
+function filterProblem() {
+  if (assetList.length === 0) {
+    return null; // aún no se ha cargado la lista de activos
+  }
+  if (settings.fromYear !== "" && settings.toYear !== "" && settings.fromYear > settings.toYear) {
+    return { blocking: true, text: "⚠️ El año «desde» es posterior al año «hasta»." };
+  }
+
+  const candidates = assetsForChoice(assetList, settings.ticker);
+  const available = candidates.filter((a) => isAssetAvailable(a, currentRange(), candlesNeeded()));
+
+  if (available.length === 0 && candidates.length === 1) {
+    const asset = candidates[0];
+    return {
+      blocking: true,
+      text: `⚠️ No hay datos de ${asset.name} en esas fechas: tiene datos de ` +
+        `${asset.first.slice(0, 4)} a ${asset.last.slice(0, 4)}. Cambia el activo o las fechas.`,
+    };
+  }
+  if (available.length === 0) {
+    return {
+      blocking: true,
+      text: "⚠️ Ningún activo tiene datos suficientes en esas fechas. Cambia el activo o las fechas.",
+    };
+  }
+  if (available.length < candidates.length) {
+    const missing = candidates.filter((a) => !available.includes(a)).map((a) => a.name);
+    return {
+      blocking: false,
+      text: `ℹ️ En esas fechas hay datos de ${available.length} de ${candidates.length} activos. ` +
+        `Sin datos: ${missing.join(", ")}.`,
+    };
+  }
+  return null;
+}
+
+// Desactiva en el desplegable los activos (y mercados) sin datos en esas fechas
+function updateAssetOptions() {
+  for (const option of assetSelect.querySelectorAll("option")) {
+    if (option.value === "") {
+      continue; // "Aleatorio (todos)" siempre se puede elegir
+    }
+    const assets = assetsForChoice(assetList, option.value);
+    const hasData = assets.some((a) => isAssetAvailable(a, currentRange(), candlesNeeded()));
+    option.disabled = !hasData;
+    // El nombre original se guarda en data-label para poder añadirle la nota
+    option.textContent = option.dataset.label + (hasData ? "" : " — sin datos en esas fechas");
+  }
+}
 
 // Marca en la página los ajustes actuales
 function renderSettings() {
@@ -511,6 +597,14 @@ function renderSettings() {
     button.setAttribute("aria-pressed", isActive);
   }
   assetSelect.value = settings.ticker;
+  fromYearSelect.value = settings.fromYear;
+  toYearSelect.value = settings.toYear;
+
+  // Activos sin datos en el rango, y aviso si hay algún problema
+  updateAssetOptions();
+  const problem = filterProblem();
+  settingsWarning.textContent = problem === null ? "" : problem.text;
+  settingsWarning.classList.toggle("blocking", problem !== null && problem.blocking);
 
   // Botón de sonido: 🔊 activado, 🔇 silenciado
   soundToggle.textContent = settings.sound ? "🔊" : "🔇";
@@ -531,7 +625,30 @@ function changeSetting(key, value) {
   settings[key] = value;
   saveSettings(settings);
   renderSettings();
-  settingsNote.textContent = "Se aplicará en el siguiente gráfico.";
+  if (blockedByFilters) {
+    // No había ninguna ronda en juego (los filtros lo impedían): no hay nada
+    // que saltarse, así que se prueba ya con los filtros nuevos
+    newRound();
+  } else {
+    settingsNote.textContent = "Se aplicará en el siguiente gráfico.";
+  }
+}
+
+function onYearChange() {
+  // Los dos desplegables se guardan juntos; los cambios se aplican igual
+  // que los demás ajustes (en el siguiente gráfico)
+  settings.fromYear = fromYearSelect.value;
+  changeSetting("toYear", toYearSelect.value);
+}
+
+// Rellena los desplegables de años, desde el primer año con datos hasta el último
+function fillYearSelects(assets) {
+  const firstYear = Math.min(...assets.map((a) => Number(a.first.slice(0, 4))));
+  const lastYear = Math.max(...assets.map((a) => Number(a.last.slice(0, 4))));
+  for (let year = firstYear; year <= lastYear; year++) {
+    fromYearSelect.appendChild(selectOption(String(year), `Desde ${year}`));
+    toYearSelect.appendChild(selectOption(String(year), `Hasta ${year}`));
+  }
 }
 
 function onRevealOptionClick(event) {
@@ -541,11 +658,12 @@ function onRevealOptionClick(event) {
   }
 }
 
-// Crea una opción del desplegable
+// Crea una opción del desplegable (data-label guarda el texto original)
 function selectOption(value, text) {
   const option = document.createElement("option");
   option.value = value;
   option.textContent = text;
+  option.dataset.label = text;
   return option;
 }
 
@@ -555,6 +673,8 @@ function selectOption(value, text) {
 // También guarda los nombres para la tabla de estadísticas.
 async function fillAssetSelect() {
   const assets = await loadAssetList();
+  assetList = assets;
+  fillYearSelects(assets);
   const validChoices = [""]; // "" = aleatorio entre todos
   for (const market of Object.keys(MARKET_NAMES)) {
     const group = document.createElement("optgroup");
@@ -719,12 +839,17 @@ soundToggle.addEventListener("click", onSoundToggle);
 joinForm.addEventListener("submit", onJoinSubmit);
 rankingRefresh.addEventListener("click", renderRanking);
 assetSelect.addEventListener("change", () => changeSetting("ticker", assetSelect.value));
+fromYearSelect.addEventListener("change", onYearChange);
+toYearSelect.addEventListener("change", onYearChange);
 document.addEventListener("keydown", onKeyDown);
 
 renderSettings();
 renderStats();
-fillAssetSelect().catch((error) => console.warn("No se pudo cargar la lista de activos:", error));
-newRound(); // primera ronda al abrir la página
+// Primera ronda al abrir la página, cuando ya está la lista de activos
+// (hace falta para comprobar los filtros). Si falla, se juega igualmente.
+fillAssetSelect()
+  .catch((error) => console.warn("No se pudo cargar la lista de activos:", error))
+  .finally(newRound);
 
 startOnline(); // ranking online, si está configurado
 

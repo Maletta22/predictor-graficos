@@ -89,47 +89,93 @@ function normalize(candles, base) {
   }));
 }
 
+// ---------------------------------------------------------------------------
+// Filtros: activo (o mercado) y rango de fechas
+// ---------------------------------------------------------------------------
+
+// Rango de fechas a partir de los años elegidos ("" = sin límite).
+//   rangeFromYears("2008", "2010") → { from: "2008-01-01", to: "2010-12-31" }
+// Las fechas "AAAA-MM-DD" se pueden comparar como texto.
+export function rangeFromYears(fromYear, toYear) {
+  return {
+    from: fromYear === "" ? "0000-01-01" : `${fromYear}-01-01`,
+    to: toYear === "" ? "9999-12-31" : `${toYear}-12-31`,
+  };
+}
+
+// Activos que encajan con lo elegido en el desplegable:
+//   ""              → todos (aleatorio)
+//   "market:bolsa"  → los de ese mercado
+//   "SPX"           → solo ese activo
+export function assetsForChoice(assets, choice) {
+  if (choice.startsWith("market:")) {
+    const market = choice.slice("market:".length); // "market:bolsa" → "bolsa"
+    return assets.filter((a) => a.market === market);
+  }
+  if (choice !== "") {
+    return assets.filter((a) => a.ticker === choice);
+  }
+  return assets;
+}
+
+// ¿Tiene el activo datos suficientes en el rango para una ronda de
+// "totalCandles" velas? Es una estimación rápida con las fechas de
+// data/index.json (sin descargar las velas): mira cuántos días naturales
+// hay en común entre el rango y los datos del activo. Las crypto cotizan
+// todos los días; el resto, unos 5 de cada 7 (y algún festivo), así que les
+// pedimos un 50 % más de días por si acaso.
+export function isAssetAvailable(info, range, totalCandles) {
+  const start = info.first > range.from ? info.first : range.from; // la fecha más tardía
+  const end = info.last < range.to ? info.last : range.to;         // la más temprana
+  if (start > end) {
+    return false; // no hay ningún día en común
+  }
+  const daysPerCandle = info.market === "crypto" ? 1 : 1.5;
+  return daysBetween(start, end) >= totalCandles * daysPerCandle;
+}
+
 // Elige un activo y un fragmento al azar.
 //   revealCount: cuántas velas se revelarán después (10, 20, 30 o 50)
-//   choice: qué activos pueden salir:
-//     ""              → cualquiera (aleatorio)
-//     "market:bolsa"  → cualquiera de ese mercado
-//     "SPX"           → solo ese activo
+//   choice: qué activos pueden salir ("" / "market:bolsa" / "SPX", ver arriba)
+//   range: rango de fechas { from, to } (ver rangeFromYears)
 // Devuelve:
 //   visible: las 60 velas que ve el usuario (normalizadas)
 //   hidden:  las "revealCount" velas siguientes, para revelar después
 //   decisionPrice / finalPrice: precios REALES de cierre al decidir y
 //     al final (solo se muestran tras responder)
 //   y los datos del activo (nombre, mercado...), que NO se muestran aún.
-export async function pickRandomRound(revealCount, choice = "") {
-  const fullList = await loadAssetList();
-  let list = fullList;
-  if (choice.startsWith("market:")) {
-    const market = choice.slice("market:".length); // "market:bolsa" → "bolsa"
-    list = fullList.filter((a) => a.market === market);
-  } else if (choice !== "") {
-    list = fullList.filter((a) => a.ticker === choice);
-  }
-  if (list.length === 0) {
-    throw new Error(`No hay activos para la opción "${choice}"`);
-  }
+export async function pickRandomRound(revealCount, choice = "", range = rangeFromYears("", "")) {
   const totalCandles = VISIBLE_CANDLES + revealCount;
+  const fullList = await loadAssetList();
+  // Solo los activos elegidos que tienen datos en el rango
+  const list = assetsForChoice(fullList, choice).filter((info) =>
+    isAssetAvailable(info, range, totalCandles)
+  );
+  if (list.length === 0) {
+    throw new Error("No hay datos para esa combinación de activo y fechas");
+  }
 
   for (let attempt = 0; attempt < MAX_TRIES; attempt++) {
     // 1. Un activo al azar (todos con la misma probabilidad)
     const info = list[randomInt(list.length)];
     const asset = await loadAsset(info.file);
 
-    // 2. Un punto de inicio al azar, dejando sitio para todas las velas
-    const start = randomInt(asset.candles.length - totalCandles + 1);
-    const windowCandles = asset.candles.slice(start, start + totalCandles);
+    // 2. Las velas que caen dentro del rango de fechas
+    const inRange = asset.candles.filter((c) => c.t >= range.from && c.t <= range.to);
+    if (inRange.length < totalCandles) {
+      continue; // la estimación falló por poco: probar otro activo
+    }
 
-    // 3. Si el fragmento tiene un agujero en los datos, probar otro
+    // 3. Un punto de inicio al azar, dejando sitio para todas las velas
+    const start = randomInt(inRange.length - totalCandles + 1);
+    const windowCandles = inRange.slice(start, start + totalCandles);
+
+    // 4. Si el fragmento tiene un agujero en los datos, probar otro
     if (hasBigGap(windowCandles)) {
       continue;
     }
 
-    // 4. Separar lo visible de lo oculto y normalizar
+    // 5. Separar lo visible de lo oculto y normalizar
     const visible = windowCandles.slice(0, VISIBLE_CANDLES);
     const hidden = windowCandles.slice(VISIBLE_CANDLES);
     const base = visible[visible.length - 1].c; // cierre de la última vela visible

@@ -69,8 +69,21 @@
           <!-- main.js añade aquí, por cada mercado, "Cualquiera de…" y sus activos -->
         </select>
       </label>
+      <div class="setting">
+        <span class="setting-label">Fechas</span>
+        <!-- main.js añade los años según los datos disponibles -->
+        <select id="from-year" aria-label="Desde el año">
+          <option value="">Desde el inicio</option>
+        </select>
+        <span class="setting-label">–</span>
+        <select id="to-year" aria-label="Hasta el año">
+          <option value="">Hasta hoy</option>
+        </select>
+      </div>
       <span id="settings-note" class="settings-note"></span>
     </div>
+    <!-- Avisos de los filtros (p. ej. un activo sin datos en esas fechas) -->
+    <p id="settings-warning" class="settings-warning" role="status"></p>
 
     <!-- Zona de juego: gráfico a la izquierda, panel lateral a la derecha
          (en pantallas estrechas, el panel pasa debajo del gráfico) -->

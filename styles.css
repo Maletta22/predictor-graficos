@@ -363,6 +363,24 @@ select {
   color: var(--accent);
 }
 
+/* Aviso de los filtros: informativo (azul) o que impide jugar (rojo) */
+.settings-warning {
+  margin: -4px 0 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  background: var(--info-bg);
+}
+
+.settings-warning:empty {
+  display: none;
+}
+
+.settings-warning.blocking {
+  color: var(--down);
+  border-left: 4px solid var(--down);
+}
+
 /* =========================================================================
    Tarjetas y zona de juego
    ========================================================================= */

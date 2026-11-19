@@ -32,6 +32,7 @@ consistente es muy difícil y comparar su resultado con el azar (50 %).
 | Velas visibles | 60 | Lo que ve el usuario antes de decidir |
 | Velas reveladas | 20 | El usuario elige 10 (corto plazo), 20, 30 o 50 |
 | Activo | aleatorio | El usuario puede elegir un mercado entero ("Cualquiera de Bolsa") o un activo concreto |
+| Fechas | sin límite | Rango por años (Desde / Hasta); las 60 + N velas deben caer dentro |
 | Criterio "sube" | cierre de la última vela revelada > cierre de la última vela visible | |
 | Empate | variación absoluta < 0,1 % → la ronda no cuenta | Evita castigar por ruido |
 | Temporalidad | diaria | Más adelante: 1h, 4h, semanal |
@@ -49,9 +50,16 @@ consistente es muy difícil y comparar su resultado con el azar (50 %).
 - Fragmentos con un salto de más de 7 días naturales entre dos velas se
   descartan: son agujeros en los datos, no cierres reales (el cierre tras el
   11-S, de 7 días, sí se mantiene).
-- Los ajustes (velas reveladas y activo) se guardan en `localStorage` y se
-  aplican **en el siguiente gráfico**, nunca en el actual: así no sirven para
-  saltarse un gráfico difícil.
+- Los ajustes (velas reveladas, activo y fechas) se guardan en `localStorage`
+  y se aplican **en el siguiente gráfico**, nunca en el actual: así no sirven
+  para saltarse un gráfico difícil. Excepción: si los filtros estaban
+  bloqueando el juego (no había ronda), el cambio se aplica al momento.
+- Filtro de fechas: los activos sin datos suficientes en el rango aparecen
+  desactivados en el desplegable ("— sin datos en esas fechas"). Un aviso
+  rojo bloquea el juego si ningún activo elegido tiene datos (o si «desde» >
+  «hasta»); uno azul informa de qué activos quedan fuera. La comprobación es
+  una estimación con `first`/`last` de `data/index.json` (crypto: 1 día por
+  vela; resto: 1,5 días), y `pickRandomRound` comprueba las velas reales.
 - Velas japonesas con cuerpo y borde visibles: mínimo 7 px por vela. Si no
   caben todas (móvil, 50 velas reveladas), se ven las más recientes y el
   gráfico se puede arrastrar.
