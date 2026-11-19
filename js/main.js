@@ -12,9 +12,16 @@ import { loadContext, describeFed, eventsInRange, newsSearchUrl } from "./contex
 import { loadSettings, saveSettings, REVEAL_OPTIONS } from "./settings.js";
 import { createLogo } from "./logos.js";
 import { drawBackdrop } from "./backdrop.js";
+import { launchConfetti } from "./confetti.js";
+import { playSound, setSoundEnabled } from "./sounds.js";
+import { fillTicker } from "./ticker.js";
 
 // Racha a partir de la cual aparece el fuego 🔥
 const FIRE_STREAK = 5;
+
+// Mejor racha mínima para celebrar un récord (🏆 y confeti). Con menos, el
+// récord saldría en casi todas las primeras rondas.
+const NEW_RECORD_MIN = 3;
 
 // Número de rondas que merecen una insignia 🎯
 const ROUND_MILESTONES = [10, 25, 50, 100, 250, 500, 1000];
@@ -49,6 +56,8 @@ const nextButton = document.getElementById("next-round");
 const revealOptions = document.getElementById("reveal-options");
 const assetSelect = document.getElementById("asset-select");
 const settingsNote = document.getElementById("settings-note");
+const soundToggle = document.getElementById("sound-toggle");
+const tickerTrack = document.getElementById("ticker-track");
 
 // Elementos de las estadísticas
 const statPlayed = document.getElementById("stat-played");
@@ -166,8 +175,9 @@ async function newRound() {
   }
 }
 
-// Pasos 2 y 3: el usuario responde y se revela el resultado
-function answer(guess) {
+// Pasos 2 y 3: el usuario responde y se revela el resultado.
+// Es "async" porque espera (await) a que termine la animación de las velas.
+async function answer(guess) {
   const round = currentRound;
   if (round === null) {
     return; // ya respondida: evita apuntarla dos veces
@@ -176,11 +186,22 @@ function answer(guess) {
 
   const { outcome, changePct } = evaluateGuess(round, guess);
   const previousBest = stats.bestStreak; // para detectar un récord nuevo
+  // Se guarda ya (por si se cierra la página), pero NO se muestra hasta el
+  // final de la animación: las estadísticas destriparían el resultado.
   recordResult(stats, round, outcome);
+
+  // Suspense: las velas aparecen una a una mientras los botones esperan
+  upButton.disabled = true;
+  downButton.disabled = true;
+  question.textContent = "Revelando…";
+  await revealCandles(round.visible, round.hidden);
+
   renderStats();
   renderBadges(outcome, changePct, previousBest);
-
-  revealCandles(round.visible, round.hidden);
+  playSound(outcome);
+  if (stats.bestStreak > previousBest && stats.bestStreak >= NEW_RECORD_MIN) {
+    launchConfetti(); // 🎉 nueva mejor racha
+  }
 
   if (outcome === "correct") {
     resultTitle.textContent = "✅ ¡Acierto!";
@@ -228,7 +249,7 @@ function renderBadges(outcome, changePct, previousBest) {
     badges.push(`🔥 ¡${stats.currentStreak} seguidas!`);
   }
   // Récord nuevo (solo a partir de 3, para que no salga en las primeras rondas)
-  if (stats.bestStreak > previousBest && stats.bestStreak >= 3) {
+  if (stats.bestStreak > previousBest && stats.bestStreak >= NEW_RECORD_MIN) {
     badges.push("🏆 ¡Nueva mejor racha!");
   }
   if (outcome !== "tie" && ROUND_MILESTONES.includes(stats.played)) {
@@ -456,6 +477,18 @@ function renderSettings() {
     button.setAttribute("aria-pressed", isActive);
   }
   assetSelect.value = settings.ticker;
+
+  // Botón de sonido: 🔊 activado, 🔇 silenciado
+  soundToggle.textContent = settings.sound ? "🔊" : "🔇";
+  soundToggle.setAttribute("aria-label", settings.sound ? "Silenciar sonidos" : "Activar sonidos");
+  setSoundEnabled(settings.sound);
+}
+
+// El sonido no afecta a la partida: se aplica al momento, sin aviso
+function onSoundToggle() {
+  settings.sound = !settings.sound;
+  saveSettings(settings);
+  renderSettings();
 }
 
 // Guarda un ajuste cambiado y avisa de que se aplicará en el siguiente gráfico
@@ -491,6 +524,7 @@ async function fillAssetSelect() {
     assetSelect.appendChild(group);
   }
   renderStats(); // ahora la tabla "por activo" ya puede mostrar los nombres
+  fillTicker(tickerTrack, assets); // cinta decorativa de arriba
   // Si el activo guardado ya no existe, volver a "Aleatorio"
   if (!assets.some((asset) => asset.ticker === settings.ticker)) {
     settings.ticker = "";
@@ -532,6 +566,7 @@ nextButton.addEventListener("click", newRound);
 resetButton.addEventListener("click", onResetStats);
 revealOptions.addEventListener("click", onRevealOptionClick);
 breakdownTabs.addEventListener("click", onBreakdownTabClick);
+soundToggle.addEventListener("click", onSoundToggle);
 assetSelect.addEventListener("change", () => changeSetting("ticker", assetSelect.value));
 document.addEventListener("keydown", onKeyDown);
 

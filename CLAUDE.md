@@ -80,6 +80,12 @@ consistente es muy difícil y comparar su resultado con el azar (50 %).
   insignias en el resultado (🔥 racha, 🏆 nueva mejor racha, 🎯 hitos de rondas
   jugadas, ⚡ movimiento de más del 10 %); comentarios en la frase de la moneda
   a partir de 20 rondas. Animaciones suaves que respetan "reducir movimiento".
+- Más recursos: logotipo "Up▲Down▼"; las velas reveladas aparecen una a una
+  (1,2 s en total); confeti al batir la mejor racha (desde 3); cinta de
+  activos arriba; sonidos al acertar/fallar con botón 🔊/🔇 (se guarda).
+- La ronda se guarda al responder, pero resultado, estadísticas, insignias,
+  sonido y confeti se muestran **al terminar la animación** (si no, las
+  estadísticas destriparían el resultado).
 
 ## 5. Arquitectura
 
@@ -99,6 +105,9 @@ consistente es muy difícil y comparar su resultado con el azar (50 %).
 │   ├── logos.js        # emblema propio de cada activo (NO logos oficiales:
 │   │                   # son marcas registradas)
 │   ├── backdrop.js     # fondo decorativo: velas inventadas, cuadrícula, flechas
+│   ├── ticker.js       # cinta decorativa con los activos (sin precios inventados)
+│   ├── confetti.js     # confeti al batir la mejor racha
+│   ├── sounds.js       # sonidos sintetizados (Web Audio, sin archivos)
 │   └── context.js      # contexto tras revelar: FED, eventos, enlace a noticias
 ├── data/
 │   ├── index.json      # lista de activos disponibles y su mercado
@@ -144,6 +153,10 @@ Decisiones sobre las fuentes:
   precio mostrado es el de una participación del fondo, no el de una onza.
 - Petróleo: **Brent** (`BZ=F`) y no WTI, que cotizó en negativo en abril de
   2020 y rompería la normalización a 100.
+- Divisas: en Yahoo, el "cierre" diario es en realidad el precio al empezar
+  el día (desde ~2021, apertura = cierre en >80 % de los días: velas sin
+  cuerpo). `rebuild_forex_closes` usa como cierre la apertura del día
+  siguiente (mercado 24 h) y descarta la última vela.
 - El script avisa de movimientos diarios de más del 30 % para revisar a mano
   si son reales (crash COVID, FTX...) o errores (p. ej. *splits* sin ajustar).
 

@@ -19,6 +19,13 @@ const EXCEPTIONAL_CLOSED_WEEKDAYS = 4;
 // Ancho mínimo de cada vela en píxeles, para que siempre se vea su cuerpo
 const MIN_BAR_SPACING = 7;
 
+// Duración total de la animación del revelado (da igual si son 10 o 50 velas)
+const REVEAL_DURATION_MS = 1200;
+
+// Cada revelado lleva un número. Si empieza otra ronda a mitad de animación,
+// el número cambia y la animación anterior se detiene.
+let revealRun = 0;
+
 let chart = null;
 let series = null;
 let decisionLine = null; // línea horizontal en el precio de la decisión (100)
@@ -177,23 +184,28 @@ function removeDecisionLine() {
   }
 }
 
-// Encaja las velas en pantalla, pero sin que cada una baje de MIN_BAR_SPACING
-// píxeles: por debajo, el cuerpo de la vela desaparece y parece un palito.
+// Encuadra "barCount" posiciones del eje (aunque aún no estén todas dibujadas,
+// como durante el revelado), sin que cada vela baje de MIN_BAR_SPACING píxeles:
+// por debajo, el cuerpo de la vela desaparece y parece un palito.
 // Si no caben todas (p. ej. en un móvil), se ven las más recientes y se puede
 // arrastrar el gráfico para ver las anteriores.
 function fitCandles(barCount) {
   const timeScale = chart.timeScale();
-  const spacing = timeScale.width() / barCount;
-  if (spacing >= MIN_BAR_SPACING) {
-    timeScale.fitContent(); // caben todas
-  } else {
-    timeScale.applyOptions({ barSpacing: MIN_BAR_SPACING });
-    timeScale.scrollToRealTime(); // ir al final (las velas más recientes)
-  }
+  const barsThatFit = Math.floor(timeScale.width() / MIN_BAR_SPACING);
+  const from = barCount <= barsThatFit ? 0 : barCount - barsThatFit;
+  // El rango "lógico" va por posiciones: 0 es la primera vela. El medio punto
+  // de margen evita que la primera y la última vela queden cortadas.
+  timeScale.setVisibleLogicalRange({ from: from - 0.5, to: barCount - 0.5 });
+}
+
+// Espera "ms" milisegundos (para la animación del revelado)
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 // Dibuja las velas visibles de una ronda nueva (sustituye a lo anterior)
 export function drawCandles(candles) {
+  revealRun++; // si había un revelado en marcha, se detiene
   removeDecisionLine();
   lastCandles = candles;
   lastRevealFrom = candles.length;
@@ -202,14 +214,19 @@ export function drawCandles(candles) {
   fitCandles(data.length);
 }
 
-// Tras la decisión: dibuja las velas visibles + las reveladas, y una línea
-// discontinua en 100 (el precio en el momento de decidir) como referencia.
-export function revealCandles(visible, hidden) {
+// Tras la decisión: añade las velas reveladas UNA A UNA (con suspense), con
+// una línea discontinua en 100 (el precio al decidir) como referencia.
+// Es "async": devuelve una promesa que se cumple cuando termina la animación,
+// para que main.js muestre el resultado justo después.
+export async function revealCandles(visible, hidden) {
+  const run = ++revealRun; // número de este revelado
   removeDecisionLine();
   lastCandles = [...visible, ...hidden];
   lastRevealFrom = visible.length;
   const data = toChartData(lastCandles, lastRevealFrom);
-  series.setData(data);
+  // Cuántos puntos del gráfico son de la parte visible (incluidos sus huecos)
+  const firstRevealed = toChartData(visible).length;
+
   decisionLine = series.createPriceLine({
     price: 100,
     color: cssColor("--muted"),
@@ -218,5 +235,22 @@ export function revealCandles(visible, hidden) {
     axisLabelVisible: false,
     title: "Tu decisión",
   });
-  fitCandles(data.length);
+
+  // Sin animación si el sistema pide "reducir movimiento": todo de golpe
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    series.setData(data);
+    fitCandles(data.length);
+    return;
+  }
+
+  series.setData(data.slice(0, firstRevealed));
+  fitCandles(data.length); // encuadre final desde el principio: sin saltos de zoom
+  const delay = REVEAL_DURATION_MS / (data.length - firstRevealed);
+  for (let i = firstRevealed; i < data.length; i++) {
+    await wait(delay);
+    if (run !== revealRun) {
+      return; // empezó otra ronda mientras tanto: dejar de animar esta
+    }
+    series.update(data[i]); // añade una vela (o un hueco) al final
+  }
 }

@@ -103,54 +103,54 @@
     "name": "Euro / Dólar",
     "market": "forex",
     "file": "EURUSD.json",
-    "count": 5945,
+    "count": 5944,
     "first": "2003-12-01",
-    "last": "2026-11-18"
+    "last": "2026-11-17"
   },
   {
     "ticker": "GBPUSD",
     "name": "Libra / Dólar",
     "market": "forex",
     "file": "GBPUSD.json",
-    "count": 5954,
+    "count": 5953,
     "first": "2003-12-01",
-    "last": "2026-11-18"
+    "last": "2026-11-17"
   },
   {
     "ticker": "USDJPY",
     "name": "Dólar / Yen",
     "market": "forex",
     "file": "USDJPY.json",
-    "count": 7783,
+    "count": 7782,
     "first": "1996-10-30",
-    "last": "2026-11-18"
+    "last": "2026-11-17"
   },
   {
     "ticker": "USDCHF",
     "name": "Dólar / Franco suizo",
     "market": "forex",
     "file": "USDCHF.json",
-    "count": 6011,
+    "count": 6010,
     "first": "2003-09-17",
-    "last": "2026-11-18"
+    "last": "2026-11-17"
   },
   {
     "ticker": "AUDUSD",
     "name": "Dólar australiano / Dólar",
     "market": "forex",
     "file": "AUDUSD.json",
-    "count": 5322,
+    "count": 5321,
     "first": "2006-05-16",
-    "last": "2026-11-18"
+    "last": "2026-11-17"
   },
   {
     "ticker": "EURGBP",
     "name": "Euro / Libra",
     "market": "forex",
     "file": "EURGBP.json",
-    "count": 7250,
+    "count": 7249,
     "first": "1999-01-04",
-    "last": "2026-11-18"
+    "last": "2026-11-17"
   },
   {
     "ticker": "GOLD",

@@ -137,10 +137,139 @@ kbd {
    Cabecera y "Cómo se juega"
    ========================================================================= */
 
-.top h1 {
+.top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Logotipo "Up▲Down▼" */
+.brand {
   margin: 0;
-  font-size: 2rem;
-  letter-spacing: -0.02em;
+  font-size: 2.2rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.brand-up {
+  color: var(--up);
+}
+
+.brand-down {
+  color: var(--down);
+}
+
+.brand-arrow {
+  display: inline-block;
+  margin: 0 2px;
+  font-size: 0.5em;
+  vertical-align: middle;
+}
+
+.brand-up .brand-arrow {
+  animation: bob-up 2.4s ease-in-out infinite;
+}
+
+.brand-down .brand-arrow {
+  animation: bob-down 2.4s ease-in-out infinite;
+}
+
+/* Las flechas del logotipo suben y bajan suavemente */
+@keyframes bob-up {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes bob-down {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(4px); }
+}
+
+/* Botón redondo con un emoji (sonido) */
+button.icon-button {
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+button.icon-button:hover {
+  background: var(--surface-alt);
+}
+
+/* =========================================================================
+   Cinta de activos (js/ticker.js)
+   ========================================================================= */
+
+.ticker {
+  overflow: hidden;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 0.8rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.ticker-track {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  padding: 6px 0;
+  /* Desfila hacia la izquierda la mitad de su ancho (el contenido está
+     duplicado) y vuelve a empezar: parece un bucle continuo */
+  animation: ticker-scroll 80s linear infinite;
+}
+
+.ticker:hover .ticker-track {
+  animation-play-state: paused; /* se para al pasar el ratón */
+}
+
+.ticker-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ticker-arrow.up {
+  color: var(--up);
+}
+
+.ticker-arrow.down {
+  color: var(--down);
+}
+
+@keyframes ticker-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+/* =========================================================================
+   Confeti (js/confetti.js)
+   ========================================================================= */
+
+.confetti {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.confetti span {
+  position: absolute;
+  top: -20px;
+  border-radius: 2px;
+  animation-name: confetti-fall;
+  animation-timing-function: cubic-bezier(0.3, 0.6, 0.6, 1);
+  animation-fill-mode: forwards;
+}
+
+@keyframes confetti-fall {
+  to {
+    transform: translate(var(--drift), 105vh) rotate(var(--spin));
+    opacity: 0.8;
+  }
 }
 
 .subtitle {
@@ -716,8 +845,8 @@ th {
     padding-top: 16px;
   }
 
-  .top h1 {
-    font-size: 1.6rem;
+  .brand {
+    font-size: 1.8rem;
   }
 
   /* Una sola columna: el panel va debajo del gráfico */

@@ -16,9 +16,20 @@
        de pantalla lo ignoran porque es solo decoración. -->
   <div id="backdrop" class="backdrop" aria-hidden="true"></div>
 
+  <!-- Cinta decorativa con los activos del juego (la rellena js/ticker.js) -->
+  <div class="ticker" aria-hidden="true">
+    <div id="ticker-track" class="ticker-track"></div>
+  </div>
+
   <main>
     <header class="top">
-      <h1>UpDown</h1>
+      <div class="top-row">
+        <!-- Logotipo: "Up" verde con ▲ y "Down" rojo con ▼ -->
+        <h1 class="brand" aria-label="UpDown">
+          <span class="brand-up">Up<span class="brand-arrow">▲</span></span><span class="brand-down">Down<span class="brand-arrow">▼</span></span>
+        </h1>
+        <button id="sound-toggle" class="icon-button" title="Activar o silenciar los sonidos">🔊</button>
+      </div>
       <p class="subtitle">
         Un gráfico real, un activo y unas fechas secretas.
         ¿Lo harás mejor que una moneda lanzada al aire?

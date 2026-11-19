@@ -244,6 +244,28 @@ def clean_candles(candles):
     return cleaned, removed
 
 
+def rebuild_forex_closes(candles):
+    """Corrige las velas de divisas de Yahoo Finance.
+
+    Problema: en los datos de divisas de Yahoo, el "cierre" de cada día es en
+    realidad el precio al EMPEZAR el día (desde ~2021, apertura y cierre son
+    idénticos en más del 80 % de los días). Las velas salen sin cuerpo.
+
+    Solución: el mercado de divisas funciona 24 horas, así que el precio al
+    terminar un día es prácticamente el de la apertura del día siguiente.
+    Usamos eso como cierre. La última vela se descarta (no tiene día siguiente).
+    """
+    rebuilt = []
+    for candle, next_candle in zip(candles, candles[1:]):
+        fixed = dict(candle)
+        fixed["c"] = next_candle["o"]
+        # El máximo y el mínimo deben abarcar también el nuevo cierre
+        fixed["h"] = max(fixed["h"], fixed["o"], fixed["c"])
+        fixed["l"] = min(fixed["l"], fixed["o"], fixed["c"])
+        rebuilt.append(fixed)
+    return rebuilt
+
+
 # ---------------------------------------------------------------------------
 # Programa principal
 # ---------------------------------------------------------------------------
@@ -261,6 +283,8 @@ def main():
             raw = download_yahoo(asset["symbol"])
 
         candles, removed = clean_candles(raw)
+        if asset["market"] == "forex":
+            candles = rebuild_forex_closes(candles)
         if not candles:
             print("  ¡No se ha descargado ninguna vela! Se salta este activo.")
             continue
