@@ -98,7 +98,7 @@ pública con fines comerciales, revisar licencias.
 
 ## 7. Hoja de ruta
 
-- [ ] **Fase 0** – Preparar entorno: Git, repositorio en GitHub, Python, este archivo.
+- [x] **Fase 0** – Preparar entorno: Git, repositorio en GitHub, Python, este archivo.
 - [ ] **Fase 1** – `download_data.py` funcionando con 3 activos de prueba.
 - [ ] **Fase 2** – Mostrar un fragmento aleatorio con Lightweight Charts.
 - [ ] **Fase 3** – Botones Sube/Baja, revelar continuación, acierto/fallo.
