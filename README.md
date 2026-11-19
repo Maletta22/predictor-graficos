@@ -1,4 +1,4 @@
-# Predictor de gráficos
+# UpDown
 
 Juego web: ves un fragmento de gráfico de velas real (bolsa, FOREX o crypto),
 sin saber qué activo es ni de qué fechas, y tienes que adivinar si el precio

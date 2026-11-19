@@ -1,4 +1,7 @@
-# Predictor de gráficos — especificación del proyecto
+# UpDown — especificación del proyecto
+
+> Nombre del juego: **UpDown**. (El repositorio y la carpeta siguen llamándose
+> `predictor-graficos`.)
 
 > Este archivo es el contexto permanente del proyecto para Claude Code.
 > Léelo entero antes de cada tarea y respeta las decisiones que aquí se fijan.
