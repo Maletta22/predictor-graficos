@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Predictor de gráficos</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- Librería de gráficos de TradingView, versión fija (ver CLAUDE.md) -->
+  <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@5.0.9/dist/lightweight-charts.standalone.production.js"></script>
+</head>
+<body>
+  <main>
+    <h1>¿Sube o baja?</h1>
+    <p class="subtitle">
+      Un gráfico real de un activo y unas fechas secretas.
+      La última vela vale 100.
+    </p>
+
+    <!-- Aquí dibuja chart.js el gráfico -->
+    <div id="chart"></div>
+
+    <p id="message" class="message"></p>
+
+    <button id="new-round">Otro gráfico</button>
+  </main>
+
+  <!-- type="module" permite usar import/export entre nuestros archivos JS -->
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

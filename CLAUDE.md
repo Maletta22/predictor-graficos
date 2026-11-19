@@ -32,11 +32,14 @@ consistente es muy difícil y comparar su resultado con el azar (50 %).
 | Empate | variación absoluta < 0,1 % → la ronda no cuenta | Evita castigar por ruido |
 | Temporalidad | diaria | Más adelante: 1h, 4h, semanal |
 
-- **Días con el mercado cerrado** (fines de semana, festivos): se muestran como
-  huecos vacíos en el eje temporal, porque es didáctico ver que el mercado
-  "salta" tras un cierre. Las 60 velas visibles son 60 velas *con cotización*;
-  los huecos no cuentan. Ojo: esto delata si el activo es crypto (cotiza 24/7,
-  sin huecos), y es una pista aceptada a propósito.
+- **Días con el mercado cerrado**: los cierres *normales* (fines de semana,
+  festivos) NO se muestran; las velas van seguidas, como en cualquier gráfico.
+  Los cierres *excepcionales* (p. ej. tras el 11-S) SÍ se muestran como huecos
+  vacíos, porque es didáctico ver cómo "salta" el mercado al reabrir. Criterio:
+  más de 4 días naturales entre dos velas = cierre excepcional (un fin de semana
+  largo con festivo dura como máximo 4), y se dibuja un hueco por cada día
+  laborable sin cotizar. Las 60 velas visibles son velas *con cotización*; los
+  huecos no cuentan.
 - Fragmentos con un salto de más de 7 días naturales entre dos velas se
   descartan: son agujeros en los datos, no cierres reales (el cierre tras el
   11-S, de 7 días, sí se mantiene).
@@ -114,7 +117,7 @@ pública con fines comerciales, revisar licencias.
 
 - [x] **Fase 0** – Preparar entorno: Git, repositorio en GitHub, Python, este archivo.
 - [x] **Fase 1** – `download_data.py` funcionando con 3 activos de prueba.
-- [ ] **Fase 2** – Mostrar un fragmento aleatorio con Lightweight Charts.
+- [x] **Fase 2** – Mostrar un fragmento aleatorio con Lightweight Charts.
 - [ ] **Fase 3** – Botones Sube/Baja, revelar continuación, acierto/fallo.
 - [ ] **Fase 4** – Estadísticas, rachas y comparación con el azar.
 - [ ] **Fase 5** – Diseño cuidado, móvil, publicar en GitHub Pages.
