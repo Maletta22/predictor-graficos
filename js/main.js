@@ -10,6 +10,8 @@ import { createCandleChart, drawCandles, revealCandles } from "./chart.js";
 import { loadStats, recordResult, resetStats, coinProbabilityAtLeast } from "./stats.js";
 import { loadContext, describeFed, eventsInRange, newsSearchUrl } from "./context.js";
 import { loadSettings, saveSettings, REVEAL_OPTIONS } from "./settings.js";
+import { createLogo } from "./logos.js";
+import { drawBackdrop } from "./backdrop.js";
 
 // Racha a partir de la cual aparece el fuego 🔥
 const FIRE_STREAK = 5;
@@ -85,6 +87,7 @@ const assetNames = {};
 const settings = loadSettings();
 
 createCandleChart(document.getElementById("chart"));
+drawBackdrop(document.getElementById("backdrop"));
 
 // ---------------------------------------------------------------------------
 // Lógica del juego (sin tocar la página)
@@ -198,7 +201,11 @@ function answer(guess) {
   const firstDate = round.visible[0].t;
   const decisionDate = round.visible[round.visible.length - 1].t;
   const lastDate = round.hidden[round.hidden.length - 1].t;
-  resultAsset.textContent = `${round.name} (${MARKET_NAMES[round.market]})`;
+  // Emblema del activo + nombre y mercado
+  resultAsset.innerHTML = "";
+  resultAsset.className = "with-logo";
+  resultAsset.appendChild(createLogo(round.ticker, round.name, "large"));
+  resultAsset.appendChild(element("span", "", `${round.name} (${MARKET_NAMES[round.market]})`));
   resultDates.textContent = `Del ${formatDate(firstDate)} al ${formatDate(lastDate)}`;
   resultPriceStart.textContent = `${formatPrice(round.decisionPrice)} (${formatDate(decisionDate)})`;
   resultPriceEndLabel.textContent = `Precio ${revealed} velas después`;
@@ -352,7 +359,8 @@ function renderStats() {
 }
 
 // Filas de la tabla de detalle según la pestaña elegida.
-// Devuelve una lista de [etiqueta, { played, correct }].
+// Devuelve una lista de [etiqueta, { played, correct }, ticker]
+// (el ticker solo en la tabla por activo, para dibujar su emblema).
 function breakdownRows() {
   const group = stats[breakdownGroup];
   const entry = (key) => group[key] || { played: 0, correct: 0 };
@@ -368,7 +376,7 @@ function breakdownRows() {
   // byAsset: solo los activos jugados, de más a menos rondas
   return Object.keys(group)
     .sort((a, b) => group[b].played - group[a].played)
-    .map((ticker) => [assetNames[ticker] || ticker, group[ticker]]);
+    .map((ticker) => [assetNames[ticker] || ticker, group[ticker], ticker]);
 }
 
 // "Moneda*": probabilidad de que una moneda lo haga igual de bien o mejor
@@ -398,9 +406,22 @@ function renderBreakdown() {
     row.appendChild(cell);
     statBreakdown.appendChild(row);
   }
-  for (const [label, { played, correct }] of rows) {
+  for (const [label, { played, correct }, ticker] of rows) {
     const row = document.createElement("tr");
-    for (const text of [label, played, correct, hitRate(correct, played), coinCell(correct, played)]) {
+
+    // Primera celda: el nombre, con su emblema si es la tabla por activo
+    const nameCell = document.createElement("td");
+    if (ticker !== undefined) {
+      const wrapper = element("span", "with-logo", "");
+      wrapper.appendChild(createLogo(ticker, label, "small"));
+      wrapper.appendChild(document.createTextNode(label));
+      nameCell.appendChild(wrapper);
+    } else {
+      nameCell.textContent = label;
+    }
+    row.appendChild(nameCell);
+
+    for (const text of [played, correct, hitRate(correct, played), coinCell(correct, played)]) {
       row.appendChild(element("td", "", text));
     }
     statBreakdown.appendChild(row);

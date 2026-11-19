@@ -22,6 +22,7 @@
   --down-soft: rgba(242, 54, 69, 0.35); /* velas reveladas que bajan */
   --info-bg: #eef3ff;     /* fondo de la frase de la moneda */
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --backdrop-opacity: 0.09; /* intensidad del fondo decorativo */
   color-scheme: light;
 }
 
@@ -45,6 +46,7 @@
     --down-soft: rgba(247, 82, 95, 0.4);
     --info-bg: #1c2433;
     --shadow: none;
+    --backdrop-opacity: 0.12;
     color-scheme: dark;
   }
 }
@@ -83,6 +85,52 @@ kbd {
   border-bottom-width: 2px;
   border-radius: 4px;
   background: var(--surface-alt);
+}
+
+/* =========================================================================
+   Fondo decorativo (js/backdrop.js)
+   ========================================================================= */
+
+.backdrop {
+  position: fixed; /* fijo: no se mueve al hacer scroll */
+  inset: 0;        /* ocupa toda la pantalla */
+  z-index: -1;     /* detrás de todo el contenido */
+  pointer-events: none; /* no captura clics */
+  opacity: var(--backdrop-opacity);
+  /* Se difumina hacia arriba para que la cabecera quede limpia */
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 45%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 45%);
+}
+
+.backdrop svg {
+  width: 100%;
+  height: 100%;
+}
+
+.bd-grid {
+  stroke: var(--muted);
+  stroke-width: 1;
+  opacity: 0.35;
+}
+
+.bd-up {
+  fill: var(--up);
+  stroke: var(--up);
+}
+
+.bd-down {
+  fill: var(--down);
+  stroke: var(--down);
+}
+
+.bd-wick {
+  stroke-width: 2;
+}
+
+.bd-line {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 3;
 }
 
 /* =========================================================================
@@ -401,6 +449,54 @@ button.link:hover {
     animation: none !important;
     transition: none !important;
   }
+}
+
+/* Emblemas de los activos (js/logos.js) */
+.logo {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+}
+
+.logo-large {
+  width: 40px;
+  height: 40px;
+  font-size: 1.1rem;
+}
+
+.logo-large.logo-long {
+  font-size: 0.75rem;
+}
+
+.logo-small {
+  width: 22px;
+  height: 22px;
+  font-size: 0.65rem;
+}
+
+.logo-small.logo-long {
+  font-size: 0.5rem;
+}
+
+/* Emblema + nombre en la misma línea */
+.with-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+td .with-logo {
+  gap: 8px;
+}
+
+/* El emblema del resultado aparece con un pequeño giro */
+#result-asset .logo {
+  animation: pop 0.4s ease-out both;
 }
 
 /* Lista "etiqueta: valor" del resultado */

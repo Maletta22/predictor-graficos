@@ -96,6 +96,9 @@ consistente es muy difícil y comparar su resultado con el azar (50 %).
 │   ├── data.js         # cargar datos y elegir fragmentos al azar
 │   ├── stats.js        # estadísticas y test binomial
 │   ├── settings.js     # ajustes de la partida (velas reveladas, activo)
+│   ├── logos.js        # emblema propio de cada activo (NO logos oficiales:
+│   │                   # son marcas registradas)
+│   ├── backdrop.js     # fondo decorativo: velas inventadas, cuadrícula, flechas
 │   └── context.js      # contexto tras revelar: FED, eventos, enlace a noticias
 ├── data/
 │   ├── index.json      # lista de activos disponibles y su mercado
