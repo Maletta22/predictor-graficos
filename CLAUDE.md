@@ -189,8 +189,10 @@ pública con fines comerciales, revisar licencias.
     velas reveladas. Pendiente: temporalidad 1h/4h/semanal.)
   - Modo "cuánto sube": el usuario estima el % de variación.
   - Indicadores opcionales (medias móviles, RSI) para ver si ayudan.
-  - [x] **Cuentas y ranking (Supabase)**. Programado; se activa al rellenar
-    `js/config.js` tras crear el proyecto y ejecutar `supabase/setup.sql`.
+  - [x] **Cuentas y ranking (Supabase)**. Activo y probado por el usuario en
+    la web publicada (unirse con apodo, subir rondas, fila en `players`).
+    Proyecto configurado en `js/config.js`; la tabla se crea con
+    `supabase/setup.sql` (incluye los `grant`, necesarios en proyectos nuevos).
     Decisiones:
     - Cuenta = usuario **anónimo** de Supabase + **apodo** (sin email ni
       contraseña). Queda ligada al navegador: si se borran sus datos, se pierde.
