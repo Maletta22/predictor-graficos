@@ -1,0 +1,4 @@
+# Librerías de Python que necesita scripts/download_data.py
+# Instalar con:  .venv\Scripts\python.exe -m pip install -r requirements.txt
+requests==2.34.2
+yfinance==1.8.0

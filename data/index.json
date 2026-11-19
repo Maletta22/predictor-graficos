@@ -1,0 +1,29 @@
+[
+  {
+    "ticker": "BTCUSDT",
+    "name": "Bitcoin / USD",
+    "market": "crypto",
+    "file": "BTCUSDT.json",
+    "count": 3381,
+    "first": "2017-08-17",
+    "last": "2026-11-18"
+  },
+  {
+    "ticker": "SPX",
+    "name": "S&P 500",
+    "market": "bolsa",
+    "file": "SPX.json",
+    "count": 16292,
+    "first": "1962-01-02",
+    "last": "2026-11-18"
+  },
+  {
+    "ticker": "EURUSD",
+    "name": "Euro / Dólar",
+    "market": "forex",
+    "file": "EURUSD.json",
+    "count": 5945,
+    "first": "2003-12-01",
+    "last": "2026-11-18"
+  }
+]
