@@ -11,5 +11,5 @@
 //
 // Mientras estén vacías, el juego funciona igual pero sin ranking.
 
-export const SUPABASE_URL = "";
-export const SUPABASE_KEY = "";
+export const SUPABASE_URL = "https://ekpzkdcroeddfwqtxrws.supabase.co";
+export const SUPABASE_KEY = "sb_publishable_p-hcTdtkjghUCDHVd3SK_g_UqJSXMmm";

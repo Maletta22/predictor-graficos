@@ -36,6 +36,14 @@ create index if not exists players_ranking
   on public.players (luck_prob, played desc)
   where played >= 30;
 
+-- Permisos sobre la TABLA. En los proyectos nuevos de Supabase no se dan
+-- solos: sin esto, la web recibe "permission denied for table players".
+--   anon          = visitantes sin cuenta: solo pueden leer el ranking
+--   authenticated = jugadores con apodo: además pueden crear y editar
+-- Qué FILAS puede tocar cada uno lo deciden las reglas (policies) de abajo.
+grant select on public.players to anon, authenticated;
+grant insert, update on public.players to authenticated;
+
 -- Seguridad a nivel de fila (Row Level Security): sin reglas, nadie puede
 -- leer ni escribir. Las reglas de abajo dicen quién puede hacer qué.
 alter table public.players enable row level security;
