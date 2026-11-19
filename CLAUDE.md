@@ -31,7 +31,7 @@ consistente es muy difícil y comparar su resultado con el azar (50 %).
 |---|---|---|
 | Velas visibles | 60 | Lo que ve el usuario antes de decidir |
 | Velas reveladas | 20 | El usuario elige 10 (corto plazo), 20, 30 o 50 |
-| Activo | aleatorio | El usuario puede fijar un solo activo |
+| Activo | aleatorio | El usuario puede elegir un mercado entero ("Cualquiera de Bolsa") o un activo concreto |
 | Criterio "sube" | cierre de la última vela revelada > cierre de la última vela visible | |
 | Empate | variación absoluta < 0,1 % → la ronda no cuenta | Evita castigar por ruido |
 | Temporalidad | diaria | Más adelante: 1h, 4h, semanal |
@@ -57,7 +57,8 @@ consistente es muy difícil y comparar su resultado con el azar (50 %).
   gráfico se puede arrastrar.
 - El activo y las fechas **no se muestran** hasta después de responder.
 - El eje de precios se **normaliza** (la última vela visible vale 100) para que
-  no se pueda reconocer el activo por su precio.
+  no se pueda reconocer el activo por su precio. **Al revelar**, el eje pasa al
+  precio real (formato español, 4 decimales si el precio es menor de 10).
 - Tras revelar: mostrar acierto/fallo, variación en %, activo, fechas reales y
   precios reales (al decidir y N velas después), en un panel lateral junto
   al gráfico (debajo en móvil).
@@ -215,8 +216,9 @@ pública con fines comerciales, revisar licencias.
     delataría el activo. Se hace por fases:
     - [x] **Fase A, gratis**: tarjeta "¿Qué pasaba en ese periodo?" con los tipos
       de la FED (FRED), los grandes eventos de `data/events.json` filtrados por
-      mercado, un enlace a Google Noticias limitado a las fechas reveladas y un
-      aviso de que coincidencia no es causalidad.
+      mercado, un enlace a Google con la búsqueda «activo noticias día de la
+      decisión» (p. ej. «S&P 500 noticias 23 de marzo de 2020») y un aviso de
+      que coincidencia no es causalidad.
     - [ ] **Fase B, con LLM** (pendiente, el usuario quiere hacerla): resumen de
       noticias del activo y del contexto macro (decisiones de la FED, etc.) con
       fuentes. La web estática no puede llamar a un LLM (expondría la clave de

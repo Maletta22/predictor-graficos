@@ -84,17 +84,20 @@ export function eventsInRange(firstDate, lastDate, market) {
   );
 }
 
-// Enlace a Google Noticias con la búsqueda limitada a esas fechas.
-// Google pide las fechas como mes/día/año.
-export function newsSearchUrl(query, fromDate, toDate) {
-  const toUsDate = (iso) => {
-    const [year, month, day] = iso.split("-");
-    return `${Number(month)}/${Number(day)}/${year}`;
-  };
-  const params = new URLSearchParams({
-    q: query,
-    tbm: "nws", // pestaña "Noticias"
-    tbs: `cdr:1,cd_min:${toUsDate(fromDate)},cd_max:${toUsDate(toDate)}`, // rango de fechas
-  });
+// Nombre del activo pensado para buscar en Google: sin aclaraciones entre
+// paréntesis ni el "/ USD" de las crypto.
+//   "Oro (fondo GLD)" → "Oro"   "Bitcoin / USD" → "Bitcoin"   "Euro / Dólar" → "Euro Dólar"
+export function searchName(name) {
+  return name
+    .replace(/\s*\(.*\)/, "")  // quita "(fondo GLD)", "(Alemania)"...
+    .replace(/ \/ USD$/, "")   // "Bitcoin / USD" → "Bitcoin"
+    .replace(" / ", " ");      // "Euro / Dólar" → "Euro Dólar"
+}
+
+// Enlace a una búsqueda de Google con el texto dado
+// (p. ej. "S&P 500 noticias 23 de marzo de 2020").
+// URLSearchParams se encarga de codificar espacios, tildes y "&" para la URL.
+export function newsSearchUrl(text) {
+  const params = new URLSearchParams({ q: text });
   return `https://www.google.com/search?${params}`;
 }

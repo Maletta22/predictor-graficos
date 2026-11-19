@@ -93,6 +93,7 @@ export function createCandleChart(container) {
     localization: {
       locale: "es-ES",
       timeFormatter: timeToLabel, // etiqueta al pasar el ratón
+      priceFormatter: formatAxisPrice, // precios con coma decimal
     },
     timeScale: {
       tickMarkFormatter: timeToLabel, // etiquetas del eje horizontal
@@ -101,7 +102,7 @@ export function createCandleChart(container) {
 
   series = chart.addSeries(LightweightCharts.CandlestickSeries, {
     borderVisible: true,
-    priceFormat: { type: "price", precision: 2, minMove: 0.01 },
+    priceFormat: priceFormatFor(100),
   });
 
   applyTheme();
@@ -203,10 +204,44 @@ function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+// Decimales del eje de precios en cada momento (2 en base 100)
+let pricePrecision = 2;
+
+// Formato del eje de precios: 4 decimales para precios pequeños (divisas
+// como EUR/USD ≈ 1,08), 2 para el resto (y para la base 100)
+function priceFormatFor(price) {
+  pricePrecision = price < 10 ? 4 : 2;
+  return { type: "price", precision: pricePrecision, minMove: 1 / 10 ** pricePrecision };
+}
+
+// Escribe los precios del eje en formato español, igual que el panel del
+// resultado: coma decimal y punto de miles (97672.4 → "97.672,40")
+function formatAxisPrice(price) {
+  return price.toLocaleString("es-ES", {
+    minimumFractionDigits: pricePrecision,
+    maximumFractionDigits: pricePrecision,
+  });
+}
+
+// Convierte velas normalizadas (base 100) a precios reales.
+// Se normalizaron como: real / precioDecisión × 100, así que para deshacerlo
+// se multiplica por precioDecisión / 100.
+function toRealPrices(candles, decisionPrice) {
+  const factor = decisionPrice / 100;
+  return candles.map((candle) => ({
+    t: candle.t,
+    o: candle.o * factor,
+    h: candle.h * factor,
+    l: candle.l * factor,
+    c: candle.c * factor,
+  }));
+}
+
 // Dibuja las velas visibles de una ronda nueva (sustituye a lo anterior)
 export function drawCandles(candles) {
   revealRun++; // si había un revelado en marcha, se detiene
   removeDecisionLine();
+  series.applyOptions({ priceFormat: priceFormatFor(100) }); // eje en base 100
   lastCandles = candles;
   lastRevealFrom = candles.length;
   const data = toChartData(candles);
@@ -214,21 +249,25 @@ export function drawCandles(candles) {
   fitCandles(data.length);
 }
 
-// Tras la decisión: añade las velas reveladas UNA A UNA (con suspense), con
-// una línea discontinua en 100 (el precio al decidir) como referencia.
+// Tras la decisión: el eje pasa de la base 100 al PRECIO REAL, y se añaden
+// las velas reveladas UNA A UNA (con suspense), con una línea discontinua en
+// el precio al decidir como referencia.
+//   decisionPrice: precio real de cierre de la última vela visible
 // Es "async": devuelve una promesa que se cumple cuando termina la animación,
 // para que main.js muestre el resultado justo después.
-export async function revealCandles(visible, hidden) {
+export async function revealCandles(visible, hidden, decisionPrice) {
   const run = ++revealRun; // número de este revelado
   removeDecisionLine();
-  lastCandles = [...visible, ...hidden];
+  series.applyOptions({ priceFormat: priceFormatFor(decisionPrice) });
+  const realVisible = toRealPrices(visible, decisionPrice);
+  lastCandles = [...realVisible, ...toRealPrices(hidden, decisionPrice)];
   lastRevealFrom = visible.length;
   const data = toChartData(lastCandles, lastRevealFrom);
   // Cuántos puntos del gráfico son de la parte visible (incluidos sus huecos)
-  const firstRevealed = toChartData(visible).length;
+  const firstRevealed = toChartData(realVisible).length;
 
   decisionLine = series.createPriceLine({
-    price: 100,
+    price: decisionPrice,
     color: cssColor("--muted"),
     lineWidth: 1,
     lineStyle: LightweightCharts.LineStyle.Dashed,

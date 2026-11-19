@@ -91,19 +91,27 @@ function normalize(candles, base) {
 
 // Elige un activo y un fragmento al azar.
 //   revealCount: cuántas velas se revelarán después (10, 20, 30 o 50)
-//   ticker: un activo concreto ("BTCUSDT"...), o "" para elegirlo al azar
+//   choice: qué activos pueden salir:
+//     ""              → cualquiera (aleatorio)
+//     "market:bolsa"  → cualquiera de ese mercado
+//     "SPX"           → solo ese activo
 // Devuelve:
 //   visible: las 60 velas que ve el usuario (normalizadas)
 //   hidden:  las "revealCount" velas siguientes, para revelar después
 //   decisionPrice / finalPrice: precios REALES de cierre al decidir y
-//     20 velas después (solo se muestran tras responder)
+//     al final (solo se muestran tras responder)
 //   y los datos del activo (nombre, mercado...), que NO se muestran aún.
-export async function pickRandomRound(revealCount, ticker = "") {
+export async function pickRandomRound(revealCount, choice = "") {
   const fullList = await loadAssetList();
-  // Si el usuario eligió un activo, solo ese; si no, todos
-  const list = ticker === "" ? fullList : fullList.filter((a) => a.ticker === ticker);
+  let list = fullList;
+  if (choice.startsWith("market:")) {
+    const market = choice.slice("market:".length); // "market:bolsa" → "bolsa"
+    list = fullList.filter((a) => a.market === market);
+  } else if (choice !== "") {
+    list = fullList.filter((a) => a.ticker === choice);
+  }
   if (list.length === 0) {
-    throw new Error(`No existe el activo ${ticker}`);
+    throw new Error(`No hay activos para la opción "${choice}"`);
   }
   const totalCandles = VISIBLE_CANDLES + revealCount;
 

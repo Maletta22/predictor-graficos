@@ -8,7 +8,9 @@
 import { pickRandomRound, loadAssetList } from "./data.js";
 import { createCandleChart, drawCandles, revealCandles } from "./chart.js";
 import { loadStats, recordResult, resetStats, coinProbabilityAtLeast } from "./stats.js";
-import { loadContext, describeRates, isEcbRelevant, eventsInRange, newsSearchUrl } from "./context.js";
+import {
+  loadContext, describeRates, isEcbRelevant, eventsInRange, newsSearchUrl, searchName,
+} from "./context.js";
 import { loadSettings, saveSettings, REVEAL_OPTIONS } from "./settings.js";
 import { createLogo } from "./logos.js";
 import { drawBackdrop } from "./backdrop.js";
@@ -211,7 +213,7 @@ async function answer(guess) {
   upButton.disabled = true;
   downButton.disabled = true;
   question.textContent = "Revelando…";
-  await revealCandles(round.visible, round.hidden);
+  await revealCandles(round.visible, round.hidden, round.decisionPrice);
 
   renderStats();
   renderBadges(outcome, changePct, previousBest);
@@ -349,9 +351,11 @@ function renderContext(round) {
     contextEvents.appendChild(item);
   }
 
-  // 3. Enlace a noticias del tramo revelado (de la decisión al final)
-  const query = round.name.replace(" / ", " "); // "Bitcoin / USD" → "Bitcoin USD"
-  contextNews.href = newsSearchUrl(query, decisionDate, lastDate);
+  // 3. Enlace a Google: activo + "noticias" + el día de tu decisión
+  //    (p. ej. "S&P 500 noticias 23 de marzo de 2020")
+  const searchText = `${searchName(round.name)} noticias ${formatDate(decisionDate)}`;
+  contextNews.href = newsSearchUrl(searchText);
+  contextNews.textContent = `Buscar en Google: «${searchText}» ↗`;
 
   contextBox.classList.remove("hidden");
 }
@@ -537,26 +541,37 @@ function onRevealOptionClick(event) {
   }
 }
 
+// Crea una opción del desplegable
+function selectOption(value, text) {
+  const option = document.createElement("option");
+  option.value = value;
+  option.textContent = text;
+  return option;
+}
+
 // Rellena el desplegable con los activos de data/index.json, agrupados por
-// mercado (<optgroup>), y guarda sus nombres para la tabla de estadísticas
+// mercado (<optgroup>). En cada grupo, primero "cualquiera de ese mercado"
+// (valor "market:bolsa"...) y luego cada activo (valor "SPX"...).
+// También guarda los nombres para la tabla de estadísticas.
 async function fillAssetSelect() {
   const assets = await loadAssetList();
+  const validChoices = [""]; // "" = aleatorio entre todos
   for (const market of Object.keys(MARKET_NAMES)) {
     const group = document.createElement("optgroup");
     group.label = MARKET_NAMES[market];
+    group.appendChild(selectOption(`market:${market}`, `🎲 Cualquiera de ${MARKET_NAMES[market]}`));
+    validChoices.push(`market:${market}`);
     for (const asset of assets.filter((a) => a.market === market)) {
-      const option = document.createElement("option");
-      option.value = asset.ticker;
-      option.textContent = asset.name;
-      group.appendChild(option);
+      group.appendChild(selectOption(asset.ticker, asset.name));
+      validChoices.push(asset.ticker);
       assetNames[asset.ticker] = asset.name;
     }
     assetSelect.appendChild(group);
   }
   renderStats(); // ahora la tabla "por activo" ya puede mostrar los nombres
   fillTicker(tickerTrack, assets); // cinta decorativa de arriba
-  // Si el activo guardado ya no existe, volver a "Aleatorio"
-  if (!assets.some((asset) => asset.ticker === settings.ticker)) {
+  // Si la opción guardada ya no existe, volver a "Aleatorio"
+  if (!validChoices.includes(settings.ticker)) {
     settings.ticker = "";
   }
   renderSettings();

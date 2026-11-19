@@ -7,7 +7,8 @@ export const REVEAL_OPTIONS = [10, 20, 30, 50];
 
 const DEFAULT_SETTINGS = {
   revealCount: 20, // velas que se revelan tras responder
-  ticker: "",      // "" = activo aleatorio
+  ticker: "",      // qué activos salen: "" = cualquiera, "market:bolsa" = un
+                   // mercado entero, "SPX" = un activo concreto
   sound: true,     // sonidos al acertar / fallar
 };
 

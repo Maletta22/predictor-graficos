@@ -65,8 +65,8 @@
       <label class="setting">
         <span class="setting-label">Activo</span>
         <select id="asset-select">
-          <option value="">🎲 Aleatorio</option>
-          <!-- main.js añade aquí un <option> por cada activo de data/index.json -->
+          <option value="">🎲 Aleatorio (todos)</option>
+          <!-- main.js añade aquí, por cada mercado, "Cualquiera de…" y sus activos -->
         </select>
       </label>
       <span id="settings-note" class="settings-note"></span>
@@ -120,7 +120,8 @@
       <p id="context-fed" class="context-fed"></p>
       <ul id="context-events" class="events"></ul>
       <p class="context-links">
-        <a id="context-news" target="_blank" rel="noopener">Buscar noticias de esas fechas ↗</a>
+        <!-- main.js pone el texto y el enlace, p. ej. «S&P 500 noticias 23 de marzo de 2020» -->
+        <a id="context-news" target="_blank" rel="noopener">Buscar noticias de ese día ↗</a>
       </p>
       <p class="context-note">
         Ojo: que un evento coincida con un movimiento no demuestra que lo causara.
