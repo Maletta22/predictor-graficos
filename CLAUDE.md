@@ -118,7 +118,7 @@ pública con fines comerciales, revisar licencias.
 - [x] **Fase 0** – Preparar entorno: Git, repositorio en GitHub, Python, este archivo.
 - [x] **Fase 1** – `download_data.py` funcionando con 3 activos de prueba.
 - [x] **Fase 2** – Mostrar un fragmento aleatorio con Lightweight Charts.
-- [ ] **Fase 3** – Botones Sube/Baja, revelar continuación, acierto/fallo.
+- [x] **Fase 3** – Botones Sube/Baja, revelar continuación, acierto/fallo.
 - [ ] **Fase 4** – Estadísticas, rachas y comparación con el azar.
 - [ ] **Fase 5** – Diseño cuidado, móvil, publicar en GitHub Pages.
 - [ ] **Fase 6+** – Ideas futuras (no empezar sin pedirlo):

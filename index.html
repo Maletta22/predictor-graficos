@@ -21,7 +21,20 @@
 
     <p id="message" class="message"></p>
 
-    <button id="new-round">Otro gráfico</button>
+    <!-- Paso 1: el usuario decide -->
+    <div id="choice" class="choice">
+      <p>¿Qué hará el precio en las próximas 20 velas?</p>
+      <button id="guess-up" class="up">▲ Sube</button>
+      <button id="guess-down" class="down">▼ Baja</button>
+    </div>
+
+    <!-- Paso 2: se revela el resultado (oculto hasta que el usuario responde) -->
+    <div id="result" class="result hidden">
+      <p id="result-title" class="result-title"></p>
+      <p id="result-change"></p>
+      <p id="result-asset"></p>
+      <button id="next-round">Siguiente gráfico</button>
+    </div>
   </main>
 
   <!-- type="module" permite usar import/export entre nuestros archivos JS -->

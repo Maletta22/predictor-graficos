@@ -48,3 +48,56 @@ button {
 button:hover {
   background: #1e4bd8;
 }
+
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Botones Sube / Baja */
+button.up {
+  background: #26a69a;
+}
+
+button.up:hover {
+  background: #1e877d;
+}
+
+button.down {
+  background: #ef5350;
+  margin-left: 8px;
+}
+
+button.down:hover {
+  background: #d9403d;
+}
+
+/* Caja del resultado */
+.result {
+  padding: 4px 16px 16px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.result-title {
+  font-size: 1.4rem;
+  font-weight: bold;
+}
+
+.result-title.correct {
+  color: #1e877d;
+}
+
+.result-title.wrong {
+  color: #d9403d;
+}
+
+.result-title.tie {
+  color: #666;
+}
+
+/* Clase para ocultar elementos desde JavaScript */
+.hidden {
+  display: none;
+}
