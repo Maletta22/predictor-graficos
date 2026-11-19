@@ -7,6 +7,7 @@
 import { pickRandomRound } from "./data.js";
 import { createCandleChart, drawCandles, revealCandles } from "./chart.js";
 import { loadStats, recordResult, resetStats, coinProbabilityAtLeast } from "./stats.js";
+import { loadContext, describeFed, eventsInRange, newsSearchUrl } from "./context.js";
 
 // Variación mínima para que la ronda cuente (CLAUDE.md, apartado 3)
 const TIE_THRESHOLD_PCT = 0.1;
@@ -39,8 +40,17 @@ const statMarkets = document.getElementById("stat-markets");
 const statTies = document.getElementById("stat-ties");
 const resetButton = document.getElementById("reset-stats");
 
+// Elementos del contexto del periodo
+const contextBox = document.getElementById("context");
+const contextFed = document.getElementById("context-fed");
+const contextEvents = document.getElementById("context-events");
+const contextNews = document.getElementById("context-news");
+
 // La ronda que se está jugando ahora mismo (null = ya respondida)
 let currentRound = null;
+
+// ¿Se han cargado los datos de contexto (FED y eventos)?
+let contextReady = false;
 
 // Estadísticas guardadas en el navegador
 let stats = loadStats();
@@ -105,6 +115,7 @@ function formatDate(isoDate) {
 async function newRound() {
   message.textContent = "";
   resultBox.classList.add("hidden");
+  contextBox.classList.add("hidden");
   choiceBox.classList.remove("hidden");
   upButton.disabled = true; // desactivados hasta que el gráfico esté listo
   downButton.disabled = true;
@@ -159,6 +170,69 @@ function answer(guess) {
 
   choiceBox.classList.add("hidden");
   resultBox.classList.remove("hidden");
+  renderContext(round);
+}
+
+// ---------------------------------------------------------------------------
+// Contexto del periodo (FED, eventos, noticias)
+// ---------------------------------------------------------------------------
+
+// 5.33 → "5,33 %"
+function formatRate(value) {
+  return `${value.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} %`;
+}
+
+// Crea un elemento HTML con una clase y un texto
+function element(tag, className, text) {
+  const el = document.createElement(tag);
+  el.className = className;
+  el.textContent = text;
+  return el;
+}
+
+function renderContext(round) {
+  if (!contextReady) {
+    return; // sin datos de contexto, el juego sigue funcionando sin la tarjeta
+  }
+  const firstDate = round.visible[0].t;
+  const decisionDate = round.visible[round.visible.length - 1].t;
+  const lastDate = round.hidden[round.hidden.length - 1].t;
+
+  // 1. Tipos de la FED
+  const fed = describeFed(firstDate, lastDate);
+  if (fed === null) {
+    contextFed.textContent = "No hay datos de tipos de la FED para estas fechas.";
+  } else {
+    const trendText = { up: "subieron", down: "bajaron", flat: "se mantuvieron estables" }[fed.trend];
+    contextFed.textContent =
+      `Tipos de interés de la FED: ${formatRate(fed.start)} al inicio del gráfico ` +
+      `y ${formatRate(fed.end)} al final (${trendText}).`;
+  }
+
+  // 2. Grandes eventos de esas fechas
+  contextEvents.innerHTML = "";
+  const found = eventsInRange(firstDate, lastDate, round.market);
+  if (found.length === 0) {
+    contextEvents.appendChild(element("li", "no-events",
+      "No hay grandes eventos registrados en estas fechas. " +
+      "Aun así el precio se movió: el día a día del mercado también mueve los precios."));
+  }
+  for (const event of found) {
+    const item = document.createElement("li");
+    item.appendChild(element("span", "event-date", formatDate(event.date)));
+    if (event.date > decisionDate) {
+      item.appendChild(element("span", "event-tag", "tras tu decisión"));
+    }
+    item.appendChild(element("span", "event-title", event.title));
+    item.appendChild(element("p", "event-text", event.text));
+    contextEvents.appendChild(item);
+  }
+
+  // 3. Enlace a noticias del tramo revelado (de la decisión al final)
+  const query = round.name.replace(" / ", " "); // "Bitcoin / USD" → "Bitcoin USD"
+  contextNews.href = newsSearchUrl(query, decisionDate, lastDate);
+
+  contextBox.classList.remove("hidden");
 }
 
 // ---------------------------------------------------------------------------
@@ -242,3 +316,10 @@ document.addEventListener("keydown", onKeyDown);
 
 renderStats();
 newRound(); // primera ronda al abrir la página
+
+// Datos de contexto en segundo plano. Si fallan, el juego sigue sin la tarjeta.
+loadContext()
+  .then(() => {
+    contextReady = true;
+  })
+  .catch((error) => console.warn("No se pudo cargar el contexto:", error));

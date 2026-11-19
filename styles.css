@@ -298,6 +298,77 @@ dd {
 }
 
 /* =========================================================================
+   Contexto del periodo
+   ========================================================================= */
+
+.context {
+  margin-top: 8px;
+  margin-bottom: 16px;
+}
+
+.context h2 {
+  margin: 0 0 12px;
+  font-size: 1.1rem;
+}
+
+.context-fed {
+  margin: 0 0 12px;
+}
+
+.events {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.events li {
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+}
+
+.event-date {
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Etiqueta "tras tu decisión" para eventos del tramo revelado */
+.event-tag {
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: var(--info-bg);
+  color: var(--accent);
+}
+
+.event-title {
+  display: block;
+  font-weight: 600;
+}
+
+.event-text {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.no-events {
+  color: var(--muted);
+}
+
+.context-links {
+  margin: 12px 0 0;
+}
+
+.context-note {
+  margin: 12px 0 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+/* =========================================================================
    Estadísticas
    ========================================================================= */
 

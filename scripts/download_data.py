@@ -5,7 +5,8 @@ Se ejecuta a mano, desde la carpeta del proyecto:
     .venv\\Scripts\\python.exe scripts\\download_data.py
 
 Para cada activo crea data/<ticker>.json con el formato del CLAUDE.md, y al
-final crea data/index.json con la lista de activos disponibles.
+final crea data/index.json con la lista de activos disponibles y
+data/fed_funds.json con el histórico de tipos de interés de la FED.
 """
 
 import json
@@ -117,6 +118,41 @@ def download_yahoo(symbol):
 
 
 # ---------------------------------------------------------------------------
+# Tipos de interés de la FED (FRED, Reserva Federal de San Luis)
+# ---------------------------------------------------------------------------
+
+# FEDFUNDS = tipo de interés efectivo de los fondos federales, media mensual.
+# Es público y no necesita cuenta. Formato CSV: "observation_date,FEDFUNDS".
+FRED_URL = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=FEDFUNDS"
+
+
+def download_fed_funds():
+    """Descarga el histórico mensual de tipos de la FED y lo guarda en data/."""
+    print("Descargando tipos de la FED (FRED, FEDFUNDS)...")
+    response = requests.get(FRED_URL, timeout=30, verify=SSL_VERIFY)
+    response.raise_for_status()
+
+    values = []
+    lines = response.text.strip().splitlines()
+    for line in lines[1:]:  # la primera línea es la cabecera
+        date, rate = line.split(",")
+        if rate == ".":  # FRED usa "." para los meses sin dato
+            continue
+        values.append({"t": date, "v": float(rate)})
+
+    output = {
+        "series": "FEDFUNDS",
+        "name": "Tipo de interés efectivo de la FED (media mensual, %)",
+        "source": "https://fred.stlouisfed.org/series/FEDFUNDS",
+        "values": values,
+    }
+    path = DATA_DIR / "fed_funds.json"
+    path.write_text(json.dumps(output, ensure_ascii=False, separators=(",", ":")),
+                    encoding="utf-8")
+    print(f"  {len(values)} meses, de {values[0]['t']} a {values[-1]['t']}")
+
+
+# ---------------------------------------------------------------------------
 # Limpieza de datos
 # ---------------------------------------------------------------------------
 
@@ -211,6 +247,9 @@ def main():
     index_path.write_text(json.dumps(index, ensure_ascii=False, indent=2),
                           encoding="utf-8")
     print(f"Listo. {len(index)} activos guardados en {DATA_DIR}")
+
+    # Contexto macroeconómico que se muestra tras cada ronda
+    download_fed_funds()
 
 
 if __name__ == "__main__":

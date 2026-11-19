@@ -72,12 +72,17 @@ consistente es muy difícil y comparar su resultado con el azar (50 %).
 │   ├── main.js         # flujo del juego (ronda, respuesta, revelar)
 │   ├── chart.js        # dibujar el gráfico
 │   ├── data.js         # cargar datos y elegir fragmentos al azar
-│   └── stats.js        # estadísticas y test binomial
+│   ├── stats.js        # estadísticas y test binomial
+│   └── context.js      # contexto tras revelar: FED, eventos, enlace a noticias
 ├── data/
 │   ├── index.json      # lista de activos disponibles y su mercado
-│   └── <ticker>.json   # velas OHLC de cada activo
+│   ├── <ticker>.json   # velas OHLC de cada activo
+│   ├── fed_funds.json  # tipos de la FED, media mensual (FRED, lo genera el script)
+│   └── events.json     # grandes eventos, escrito A MANO (fecha, mercados, título, texto)
 └── scripts/
-    └── download_data.py  # descarga y prepara los datos (se ejecuta a mano)
+    ├── download_data.py  # descarga y prepara los datos (se ejecuta a mano)
+    └── serve.py          # servidor local para probar (envía en trozos de 64 KB;
+                          # `python -m http.server` corta descargas en este PC)
 ```
 
 - **Gráfico**: librería Lightweight Charts de TradingView (gratuita, Apache 2.0),
@@ -99,6 +104,7 @@ consistente es muy difícil y comparar su resultado con el azar (50 %).
 | Crypto | API pública de Binance (klines) | Python + `requests` |
 | Bolsa (índices y acciones) | Yahoo Finance | Python + `yfinance` |
 | FOREX | Yahoo Finance (`EURUSD=X`, etc.) | Python + `yfinance` |
+| Tipos de la FED | FRED (serie `FEDFUNDS`, pública, sin cuenta) | Python + `requests` |
 
 Activos iniciales (ampliable): BTC, ETH, SOL · S&P 500, IBEX 35, Nasdaq 100,
 Apple, Santander · EUR/USD, GBP/USD, USD/JPY.
@@ -129,16 +135,21 @@ pública con fines comerciales, revisar licencias.
   - Indicadores opcionales (medias móviles, RSI) para ver si ayudan.
   - Cuentas de usuario y ranking (Supabase).
   - Más activos y mercados: oro y materias primas, más índices y divisas (ver apartado 6).
-  - **Noticias del periodo tras responder**: un resumen de qué pasó y por qué se
-    movió el activo en esas fechas, con enlaces a las fuentes (como hace un LLM).
-    Solo se muestra *después* de responder, porque antes delataría el activo.
-    Notas de viabilidad, a decidir cuando se aborde:
-    - Yahoo Finance (`yfinance`) solo da noticias recientes, no históricas por fecha.
-    - Opción gratis: un enlace a una búsqueda de noticias limitada a esas fechas.
-    - Opción con resumen: generar los resúmenes **por adelantado** con un script
-      (un LLM con búsqueda web) y guardarlos en `data/`. Esto requiere una cuenta
-      de API de pago, así que hay que preguntar antes. Como los fragmentos son
-      aleatorios, habría que precalcular un catálogo fijo de rondas.
+  - **Noticias del periodo tras responder** (objetivo: pasar de "juego" a
+    herramienta educativa). Solo se muestra *después* de responder, porque antes
+    delataría el activo. Se hace por fases:
+    - [x] **Fase A, gratis**: tarjeta "¿Qué pasaba en ese periodo?" con los tipos
+      de la FED (FRED), los grandes eventos de `data/events.json` filtrados por
+      mercado, un enlace a Google Noticias limitado a las fechas reveladas y un
+      aviso de que coincidencia no es causalidad.
+    - [ ] **Fase B, con LLM** (pendiente, el usuario quiere hacerla): resumen de
+      noticias del activo y del contexto macro (decisiones de la FED, etc.) con
+      fuentes. La web estática no puede llamar a un LLM (expondría la clave de
+      API), así que hay que generar los resúmenes **por adelantado** con un
+      script (LLM con búsqueda web) y guardarlos en `data/`. Como los fragmentos
+      son aleatorios, un resumen **por activo y mes** (~1.000 en total).
+      Requiere cuenta de API de pago: preguntar y calcular el coste antes.
+    - Idea relacionada: tipos del BCE para las rondas de EUR/USD.
 
 ## 8. Convenciones
 

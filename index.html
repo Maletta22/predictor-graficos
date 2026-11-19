@@ -76,6 +76,20 @@
 
     <p id="message" class="message"></p>
 
+    <!-- Contexto del periodo: solo se muestra tras responder (lo rellena main.js) -->
+    <section id="context" class="card panel context hidden">
+      <h2>¿Qué pasaba en ese periodo?</h2>
+      <p id="context-fed" class="context-fed"></p>
+      <ul id="context-events" class="events"></ul>
+      <p class="context-links">
+        <a id="context-news" target="_blank" rel="noopener">Buscar noticias de esas fechas ↗</a>
+      </p>
+      <p class="context-note">
+        Ojo: que un evento coincida con un movimiento no demuestra que lo causara.
+        Los precios reaccionan a muchas cosas a la vez, y a menudo se anticipan a las noticias.
+      </p>
+    </section>
+
     <!-- Estadísticas del jugador (las rellena main.js) -->
     <section class="card panel stats">
       <h2>Tus estadísticas</h2>

@@ -10,8 +10,9 @@ const MAX_TRIES = 50;                // intentos antes de rendirse
 let assetList = null;
 const assetCache = {};
 
-// Descarga un archivo JSON y lo convierte en un objeto de JavaScript
-async function loadJson(path) {
+// Descarga un archivo JSON y lo convierte en un objeto de JavaScript.
+// Se exporta porque context.js también la usa.
+export async function loadJson(path) {
   const response = await fetch(path);
   if (!response.ok) {
     throw new Error(`No se pudo cargar ${path} (error ${response.status})`);
