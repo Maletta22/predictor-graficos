@@ -32,6 +32,14 @@ consistente es muy difícil y comparar su resultado con el azar (50 %).
 | Empate | variación absoluta < 0,1 % → la ronda no cuenta | Evita castigar por ruido |
 | Temporalidad | diaria | Más adelante: 1h, 4h, semanal |
 
+- **Días con el mercado cerrado** (fines de semana, festivos): se muestran como
+  huecos vacíos en el eje temporal, porque es didáctico ver que el mercado
+  "salta" tras un cierre. Las 60 velas visibles son 60 velas *con cotización*;
+  los huecos no cuentan. Ojo: esto delata si el activo es crypto (cotiza 24/7,
+  sin huecos), y es una pista aceptada a propósito.
+- Fragmentos con un salto de más de 7 días naturales entre dos velas se
+  descartan: son agujeros en los datos, no cierres reales (el cierre tras el
+  11-S, de 7 días, sí se mantiene).
 - El activo y las fechas **no se muestran** hasta después de responder.
 - El eje de precios se **normaliza** (la última vela visible vale 100) para que
   no se pueda reconocer el activo por su precio.
@@ -90,6 +98,12 @@ consistente es muy difícil y comparar su resultado con el azar (50 %).
 Activos iniciales (ampliable): BTC, ETH, SOL · S&P 500, IBEX 35, Nasdaq 100,
 Apple, Santander · EUR/USD, GBP/USD, USD/JPY.
 
+Ampliación prevista (más adelante): materias primas como **oro** (`GC=F`),
+plata y petróleo; más índices y mercados (DAX, Nikkei, Euro Stoxx 50,
+emergentes) y más divisas (USD/CHF, AUD/USD, EUR/GBP...). Basta con añadirlos a
+la lista `ASSETS` de `download_data.py`; si son de otro tipo, añadir un nuevo
+valor de `market` (p. ej. "materias primas").
+
 El script debe: descargar, limpiar huecos y valores nulos, y guardar en el
 formato del apartado 5. Mínimo 5 años de datos diarios por activo.
 
@@ -109,6 +123,17 @@ pública con fines comerciales, revisar licencias.
   - Modo "cuánto sube": el usuario estima el % de variación.
   - Indicadores opcionales (medias móviles, RSI) para ver si ayudan.
   - Cuentas de usuario y ranking (Supabase).
+  - Más activos y mercados: oro y materias primas, más índices y divisas (ver apartado 6).
+  - **Noticias del periodo tras responder**: un resumen de qué pasó y por qué se
+    movió el activo en esas fechas, con enlaces a las fuentes (como hace un LLM).
+    Solo se muestra *después* de responder, porque antes delataría el activo.
+    Notas de viabilidad, a decidir cuando se aborde:
+    - Yahoo Finance (`yfinance`) solo da noticias recientes, no históricas por fecha.
+    - Opción gratis: un enlace a una búsqueda de noticias limitada a esas fechas.
+    - Opción con resumen: generar los resúmenes **por adelantado** con un script
+      (un LLM con búsqueda web) y guardarlos en `data/`. Esto requiere una cuenta
+      de API de pago, así que hay que preguntar antes. Como los fragmentos son
+      aleatorios, habría que precalcular un catálogo fijo de rondas.
 
 ## 8. Convenciones
 
