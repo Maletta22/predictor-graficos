@@ -1,5 +1,7 @@
 # UpDown
 
+**Juega aquí: https://maletta22.github.io/predictor-graficos/**
+
 Juego web: ves un fragmento de gráfico de velas real (bolsa, FOREX o crypto),
 sin saber qué activo es ni de qué fechas, y tienes que adivinar si el precio
 **sube** o **baja**. Después se revela la continuación y se compara tu

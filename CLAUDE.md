@@ -130,7 +130,10 @@ consistente es muy difícil y comparar su resultado con el azar (50 %).
     "interval": "1d",
     "candles": [ { "t": "2021-03-01", "o": 45000, "h": 49800, "l": 44900, "c": 49600 } ] }
   ```
-- **Hosting**: GitHub Pages (gratis). Se publica desde la rama `main`.
+- **Hosting**: GitHub Pages (gratis). Se publica desde la rama `main`, carpeta
+  raíz, sin Jekyll (`.nojekyll`). Web: https://maletta22.github.io/predictor-graficos/
+  Cada `git push` a `main` la actualiza en 1-2 minutos. GitHub Pages guarda
+  copias en caché unos 10 minutos: tras un cambio, recargar con Ctrl+F5.
 
 ## 6. Fuentes de datos
 
@@ -176,7 +179,7 @@ pública con fines comerciales, revisar licencias.
 - [x] **Fase 2** – Mostrar un fragmento aleatorio con Lightweight Charts.
 - [x] **Fase 3** – Botones Sube/Baja, revelar continuación, acierto/fallo.
 - [x] **Fase 4** – Estadísticas, rachas y comparación con el azar.
-- [ ] **Fase 5** – Diseño cuidado, móvil, publicar en GitHub Pages.
+- [x] **Fase 5** – Diseño cuidado, móvil, publicar en GitHub Pages.
 - [ ] **Fase 6+** – Ideas futuras (no empezar sin pedirlo):
   - Elegir mercado y temporalidad. (Hecho: elegir un activo concreto y las
     velas reveladas. Pendiente: temporalidad 1h/4h/semanal.)
