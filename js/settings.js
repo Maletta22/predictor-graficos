@@ -7,8 +7,9 @@ export const REVEAL_OPTIONS = [10, 20, 30, 50];
 
 const DEFAULT_SETTINGS = {
   revealCount: 20, // velas que se revelan tras responder
-  ticker: "",      // qué activos salen: "" = cualquiera, "market:acciones" = un
-                   // mercado entero, "SPX" = un activo concreto
+  tickers: [],     // qué activos salen: [] = todos; si no, la lista elegida,
+                   // p. ej. ["AAPL", "EURUSD"]. (Antes era "ticker", con un
+                   // solo valor: main.js convierte los ajustes antiguos.)
   fromYear: "",    // rango de fechas: año inicial ("" = sin límite)
   toYear: "",      // año final ("" = sin límite)
   sound: true,     // sonidos al acertar / fallar

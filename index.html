@@ -34,6 +34,7 @@
         Un gráfico real, un activo y unas fechas secretas.
         ¿Lo harás mejor que una moneda lanzada al aire?
       </p>
+      <p class="dateline">Juego educativo · Datos reales de bolsa, divisas, crypto y materias primas</p>
     </header>
 
     <details class="howto">
@@ -62,13 +63,6 @@
           <button data-value="50" title="Largo plazo">50</button>
         </div>
       </div>
-      <label class="setting">
-        <span class="setting-label">Activo</span>
-        <select id="asset-select">
-          <option value="">🎲 Aleatorio (todos)</option>
-          <!-- main.js añade aquí, por cada mercado, "Cualquiera de…" y sus activos -->
-        </select>
-      </label>
       <div class="setting">
         <span class="setting-label">Fechas</span>
         <!-- main.js añade los años según los datos disponibles -->
@@ -82,6 +76,26 @@
       </div>
       <span id="settings-note" class="settings-note"></span>
     </div>
+
+    <!-- Selector de activos: plegado ocupa una línea con el resumen de lo
+         elegido; desplegado, una fila por mercado. Se pueden elegir varios
+         mercados y activos a la vez (los rellena main.js). -->
+    <details id="asset-picker" class="asset-picker">
+      <summary>
+        <span class="setting-label">Activos</span>
+        <span id="asset-summary" class="asset-summary"></span>
+        <span class="asset-toggle-hint">Elegir</span>
+      </summary>
+      <div class="asset-picker-body">
+        <div class="asset-picker-head">
+          <button id="asset-all" class="chip all" type="button">🎲 Todos</button>
+          <span class="asset-picker-help">
+            Pulsa un mercado o un activo para añadirlo o quitarlo. Puedes combinar varios.
+          </span>
+        </div>
+        <div id="asset-table" class="asset-table"></div>
+      </div>
+    </details>
     <!-- Avisos de los filtros (p. ej. un activo sin datos en esas fechas) -->
     <p id="settings-warning" class="settings-warning" role="status"></p>
 

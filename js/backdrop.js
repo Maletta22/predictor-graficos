@@ -1,5 +1,5 @@
 // backdrop.js — fondo decorativo de la página: una cuadrícula tipo terminal
-// de bolsa, un gráfico de velas INVENTADO (distinto en cada visita) y flechas.
+// de bolsa y un gráfico de velas INVENTADO (distinto en cada visita), en tinta.
 //
 // Se dibuja con SVG (gráficos vectoriales: líneas y rectángulos descritos con
 // código). Los colores salen de las clases CSS "bd-*" de styles.css, así que
@@ -68,19 +68,6 @@ export function drawBackdrop(container) {
 
   // 3. Línea de tendencia que une los cierres
   svg.appendChild(svgElement("polyline", { points: closes.join(" "), class: "bd-line" }));
-
-  // 4. Flechas ▲ ▼ repartidas al azar
-  for (let i = 0; i < 10; i++) {
-    const isUp = Math.random() < 0.5;
-    const arrow = svgElement("text", {
-      x: random(0, WIDTH),
-      y: random(80, HEIGHT * 0.6),
-      "font-size": random(40, 120),
-      class: isUp ? "bd-up" : "bd-down",
-    });
-    arrow.textContent = isUp ? "▲" : "▼";
-    svg.appendChild(arrow);
-  }
 
   container.appendChild(svg);
 }

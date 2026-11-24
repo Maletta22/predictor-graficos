@@ -31,7 +31,7 @@ consistente es muy difícil y comparar su resultado con el azar (50 %).
 |---|---|---|
 | Velas visibles | 60 | Lo que ve el usuario antes de decidir |
 | Velas reveladas | 20 | El usuario elige 10 (corto plazo), 20, 30 o 50 |
-| Activo | aleatorio | El usuario puede elegir un mercado entero ("Cualquiera de Bolsa") o un activo concreto |
+| Activos | todos | El usuario elige **uno o varios** mercados y/o activos a la vez (p. ej. Crypto + Apple + EUR/USD) |
 | Fechas | sin límite | Rango por años (Desde / Hasta); las 60 + N velas deben caer dentro |
 | Criterio "sube" | cierre de la última vela revelada > cierre de la última vela visible | |
 | Empate | variación absoluta < 0,1 % → la ronda no cuenta | Evita castigar por ruido |
@@ -54,8 +54,14 @@ consistente es muy difícil y comparar su resultado con el azar (50 %).
   y se aplican **en el siguiente gráfico**, nunca en el actual: así no sirven
   para saltarse un gráfico difícil. Excepción: si los filtros estaban
   bloqueando el juego (no había ronda), el cambio se aplica al momento.
+- Selector de activos (`<details>` plegable): plegado, una línea con el
+  resumen («Apple y Crypto»); desplegado, una fila por mercado con un botón
+  para el mercado entero y una pastilla por activo. Se guarda en
+  `settings.tickers` (`[]` = todos; si se eligen todos, se guarda `[]`). Un
+  mercado elegido solo en parte se marca con borde discontinuo. Los ajustes
+  antiguos (`ticker`, un solo valor) se convierten al cargar.
 - Filtro de fechas: los activos sin datos suficientes en el rango aparecen
-  desactivados en el desplegable ("— sin datos en esas fechas"). Un aviso
+  apagados y tachados en el selector (siguen pudiéndose pulsar). Un aviso
   rojo bloquea el juego si ningún activo elegido tiene datos (o si «desde» >
   «hasta»); uno azul informa de qué activos quedan fuera. La comprobación es
   una estimación con `first`/`last` de `data/index.json` (crypto: 1 día por
@@ -93,6 +99,11 @@ consistente es muy difícil y comparar su resultado con el azar (50 %).
 - Más recursos: logotipo "Up▲Down▼"; las velas reveladas aparecen una a una
   (1,2 s en total); confeti al batir la mejor racha (desde 3); cinta de
   activos arriba; sonidos al acertar/fallar con botón 🔊/🔇 (se guarda).
+- Estilo visual "periódico financiero": letra Times New Roman (sin fuentes
+  externas), papel marfil y tinta azul marino, filetes dorados, títulos en
+  versalitas, cabecera centrada con doble línea; en modo oscuro, fondo noche
+  con acento dorado (`--on-accent` es el color del texto sobre el acento).
+  El fondo decorativo son velas en tinta (huecas las que suben).
 - La ronda se guarda al responder, pero resultado, estadísticas, insignias,
   sonido y confeti se muestran **al terminar la animación** (si no, las
   estadísticas destriparían el resultado).

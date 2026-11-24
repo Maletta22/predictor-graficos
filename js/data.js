@@ -103,19 +103,15 @@ export function rangeFromYears(fromYear, toYear) {
   };
 }
 
-// Activos que encajan con lo elegido en el desplegable:
-//   ""              → todos (aleatorio)
-//   "market:acciones"  → los de ese mercado
-//   "SPX"           → solo ese activo
-export function assetsForChoice(assets, choice) {
-  if (choice.startsWith("market:")) {
-    const market = choice.slice("market:".length); // "market:acciones" → "acciones"
-    return assets.filter((a) => a.market === market);
+// Activos que encajan con los elegidos en el selector:
+//   []                 → todos (aleatorio)
+//   ["AAPL", "EURUSD"] → solo esos (pueden ser de mercados distintos)
+// Elegir un mercado entero equivale a elegir todos sus activos.
+export function assetsForChoice(assets, tickers) {
+  if (tickers.length === 0) {
+    return assets;
   }
-  if (choice !== "") {
-    return assets.filter((a) => a.ticker === choice);
-  }
-  return assets;
+  return assets.filter((a) => tickers.includes(a.ticker));
 }
 
 // ¿Tiene el activo datos suficientes en el rango para una ronda de
@@ -136,7 +132,7 @@ export function isAssetAvailable(info, range, totalCandles) {
 
 // Elige un activo y un fragmento al azar.
 //   revealCount: cuántas velas se revelarán después (10, 20, 30 o 50)
-//   choice: qué activos pueden salir ("" / "market:acciones" / "SPX", ver arriba)
+//   tickers: qué activos pueden salir ([] = todos, ver assetsForChoice)
 //   range: rango de fechas { from, to } (ver rangeFromYears)
 // Devuelve:
 //   visible: las 60 velas que ve el usuario (normalizadas)
@@ -144,11 +140,11 @@ export function isAssetAvailable(info, range, totalCandles) {
 //   decisionPrice / finalPrice: precios REALES de cierre al decidir y
 //     al final (solo se muestran tras responder)
 //   y los datos del activo (nombre, mercado...), que NO se muestran aún.
-export async function pickRandomRound(revealCount, choice = "", range = rangeFromYears("", "")) {
+export async function pickRandomRound(revealCount, tickers = [], range = rangeFromYears("", "")) {
   const totalCandles = VISIBLE_CANDLES + revealCount;
   const fullList = await loadAssetList();
   // Solo los activos elegidos que tienen datos en el rango
-  const list = assetsForChoice(fullList, choice).filter((info) =>
+  const list = assetsForChoice(fullList, tickers).filter((info) =>
     isAssetAvailable(info, range, totalCandles)
   );
   if (list.length === 0) {

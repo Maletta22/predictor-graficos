@@ -4,49 +4,60 @@
    chart.js también los lee, para que el gráfico vaya a juego.
    ========================================================================= */
 
+/* Estilo "periódico financiero": papel marfil, tinta azul marino, filetes
+   dorados y letra con remate (serif). En modo oscuro, tinta sobre noche. */
 :root {
-  --bg: #f4f5f7;          /* fondo de la página */
-  --surface: #ffffff;     /* fondo de las tarjetas */
-  --surface-alt: #f7f8fa; /* fondo de zonas secundarias */
-  --border: #e2e5ea;
-  --text: #1b1f24;
-  --muted: #5f6b7a;       /* texto secundario */
-  --grid: #eef0f3;        /* cuadrícula del gráfico */
-  --accent: #2962ff;      /* azul de botones y enlaces */
-  --accent-hover: #1e4bd8;
-  --up: #089981;          /* verde: sube */
-  --up-hover: #067a67;
-  --down: #f23645;        /* rojo: baja */
-  --down-hover: #d12a38;
-  --up-soft: rgba(8, 153, 129, 0.35);   /* velas reveladas que suben */
-  --down-soft: rgba(242, 54, 69, 0.35); /* velas reveladas que bajan */
-  --info-bg: #eef3ff;     /* fondo de la frase de la moneda */
-  --shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  --backdrop-opacity: 0.09; /* intensidad del fondo decorativo */
+  --font-serif: "Times New Roman", Times, "Liberation Serif", Georgia, serif;
+  --bg: #f4efe4;          /* fondo de la página: papel marfil */
+  --surface: #fffcf5;     /* fondo de las tarjetas */
+  --surface-alt: #f3ecdd; /* fondo de zonas secundarias */
+  --border: #dcd2bf;
+  --text: #1c2333;        /* tinta azul marino */
+  --muted: #6b6457;       /* texto secundario */
+  --grid: #efe8d8;        /* cuadrícula del gráfico */
+  --accent: #1f3a5f;      /* azul marino de botones y enlaces */
+  --accent-hover: #142a47;
+  --on-accent: #fffcf5;   /* texto sobre el color de acento */
+  --gold: #a8823e;        /* filetes y detalles dorados */
+  --up: #2e7d5b;          /* verde: sube */
+  --up-hover: #23654a;
+  --down: #a8323e;        /* granate: baja */
+  --down-hover: #8b2732;
+  --up-soft: rgba(46, 125, 91, 0.35);   /* velas reveladas que suben */
+  --down-soft: rgba(168, 50, 62, 0.35); /* velas reveladas que bajan */
+  --info-bg: #f1eadb;     /* fondo de la frase de la moneda */
+  --tape-bg: #1c2333;     /* cinta de activos de arriba */
+  --tape-text: #e9e1cf;
+  --shadow: 0 1px 2px rgba(60, 45, 20, 0.05), 0 10px 28px -16px rgba(60, 45, 20, 0.25);
+  --backdrop-opacity: 0.07; /* intensidad del fondo decorativo */
   color-scheme: light;
 }
 
 /* Modo oscuro: si el sistema del usuario usa tema oscuro, cambiamos los colores */
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #0f1217;
-    --surface: #171b22;
-    --surface-alt: #1d222b;
-    --border: #2a2f38;
-    --text: #e6e9ee;
-    --muted: #9aa4b2;
-    --grid: #222833;
-    --accent: #5b8cff;
-    --accent-hover: #7aa2ff;
-    --up: #22ab94;
-    --up-hover: #2fc2a9;
-    --down: #f7525f;
-    --down-hover: #ff6b77;
-    --up-soft: rgba(34, 171, 148, 0.4);
-    --down-soft: rgba(247, 82, 95, 0.4);
+    --bg: #0e131b;
+    --surface: #151b26;
+    --surface-alt: #1b2230;
+    --border: #2c3445;
+    --text: #ece4d3;
+    --muted: #a39a88;
+    --grid: #1e2633;
+    --accent: #c9a86a;      /* en oscuro, el acento es dorado */
+    --accent-hover: #dcbf85;
+    --on-accent: #11161f;
+    --gold: #c9a86a;
+    --up: #4fae86;
+    --up-hover: #63c299;
+    --down: #d9606b;
+    --down-hover: #e57a84;
+    --up-soft: rgba(79, 174, 134, 0.4);
+    --down-soft: rgba(217, 96, 107, 0.4);
     --info-bg: #1c2433;
-    --shadow: none;
-    --backdrop-opacity: 0.12;
+    --tape-bg: #090c12;
+    --tape-text: #bfb6a3;
+    --shadow: 0 10px 28px -16px rgba(0, 0, 0, 0.6);
+    --backdrop-opacity: 0.08;
     color-scheme: dark;
   }
 }
@@ -61,10 +72,23 @@
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  line-height: 1.5;
-  background: var(--bg);
+  font-family: var(--font-serif);
+  font-size: 17px; /* la letra Times se ve pequeña: un punto más que lo normal */
+  line-height: 1.55;
+  /* Papel: un tono liso con una luz suave arriba */
+  background:
+    radial-gradient(ellipse at top, var(--surface) 0%, transparent 60%),
+    var(--bg);
+  background-attachment: fixed;
   color: var(--text);
+  font-variant-numeric: lining-nums; /* cifras alineadas, no "de texto antiguo" */
+}
+
+/* Títulos de sección en versalitas, como las cabeceras de un periódico */
+h2 {
+  font-weight: 600;
+  font-variant: small-caps;
+  letter-spacing: 0.05em;
 }
 
 main {
@@ -75,6 +99,8 @@ main {
 
 a {
   color: var(--accent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
 }
 
 kbd {
@@ -113,42 +139,61 @@ kbd {
   opacity: 0.35;
 }
 
+/* Velas del fondo en tinta, como un grabado: huecas las que suben,
+   rellenas las que bajan */
 .bd-up {
-  fill: var(--up);
-  stroke: var(--up);
+  fill: none;
+  stroke: var(--text);
+  stroke-width: 1.5;
 }
 
 .bd-down {
-  fill: var(--down);
-  stroke: var(--down);
+  fill: var(--text);
+  stroke: var(--text);
 }
 
 .bd-wick {
-  stroke-width: 2;
+  stroke-width: 1.5;
 }
 
 .bd-line {
   fill: none;
-  stroke: var(--accent);
-  stroke-width: 3;
+  stroke: var(--gold);
+  stroke-width: 2;
 }
 
 /* =========================================================================
    Cabecera y "Cómo se juega"
    ========================================================================= */
 
+/* Cabecera como la de un periódico: título centrado entre filetes */
+.top {
+  margin-bottom: 18px;
+  padding-bottom: 10px;
+  border-bottom: 3px double var(--text); /* doble línea bajo la cabecera */
+  text-align: center;
+}
+
 .top-row {
+  position: relative;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
+}
+
+/* El botón de sonido, a la derecha sin descentrar el título */
+.top-row .icon-button {
+  position: absolute;
+  right: 0;
 }
 
 /* Logotipo "Up▲Down▼" */
 .brand {
   margin: 0;
-  font-size: 2.2rem;
-  font-weight: 800;
-  letter-spacing: -0.03em;
+  font-size: 3rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1.1;
 }
 
 .brand-up {
@@ -189,8 +234,9 @@ kbd {
 button.icon-button {
   padding: 6px 10px;
   border: 1px solid var(--border);
+  border-radius: 50%;
   background: var(--surface);
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   line-height: 1;
 }
 
@@ -204,10 +250,12 @@ button.icon-button:hover {
 
 .ticker {
   overflow: hidden;
-  border-bottom: 1px solid var(--border);
-  background: var(--surface);
+  border-bottom: 2px solid var(--gold);
+  background: var(--tape-bg);
   font-size: 0.8rem;
-  color: var(--muted);
+  font-variant: small-caps;
+  letter-spacing: 0.04em;
+  color: var(--tape-text);
   white-space: nowrap;
 }
 
@@ -273,7 +321,19 @@ button.icon-button:hover {
 }
 
 .subtitle {
-  margin: 4px 0 12px;
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* Línea pequeña bajo el título: "Juego educativo · Datos reales…" */
+.dateline {
+  margin: 8px 0 0;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+  font-size: 0.8rem;
+  font-variant: small-caps;
+  letter-spacing: 0.08em;
   color: var(--muted);
 }
 
@@ -286,7 +346,7 @@ button.icon-button:hover {
 .howto summary {
   cursor: pointer;
   color: var(--accent);
-  font-weight: 500;
+  font-style: italic;
 }
 
 .howto ol {
@@ -314,6 +374,8 @@ button.icon-button:hover {
 
 .setting-label {
   font-size: 0.85rem;
+  font-variant: small-caps;
+  letter-spacing: 0.06em;
   color: var(--muted);
 }
 
@@ -321,7 +383,7 @@ button.icon-button:hover {
 .segmented {
   display: inline-flex;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 3px;
   overflow: hidden;
   background: var(--surface);
 }
@@ -345,7 +407,7 @@ button.icon-button:hover {
 
 .segmented button.active {
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
 }
 
 select {
@@ -353,21 +415,165 @@ select {
   font-size: 0.9rem;
   padding: 6px 10px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 3px;
   background: var(--surface);
   color: var(--text);
 }
 
 .settings-note {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
+  font-style: italic;
   color: var(--accent);
+}
+
+/* -------------------------------------------------------------------------
+   Selector de activos (varios a la vez). Plegado: una línea con el resumen.
+   Desplegado: una fila por mercado, con sus activos al lado.
+   ------------------------------------------------------------------------- */
+
+.asset-picker {
+  margin-bottom: 12px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+}
+
+.asset-picker summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  cursor: pointer;
+  list-style: none; /* sin el triángulo por defecto del navegador */
+}
+
+.asset-picker summary::-webkit-details-marker {
+  display: none;
+}
+
+/* Lo elegido, en cursiva; si no cabe, termina en "…" */
+.asset-summary {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-style: italic;
+}
+
+/* "Elegir ▾" cuando está plegado, "Cerrar ▴" cuando está abierto */
+.asset-toggle-hint {
+  font-size: 0.85rem;
+  color: var(--accent);
+}
+
+.asset-toggle-hint::after {
+  content: " ▾";
+}
+
+.asset-picker[open] .asset-toggle-hint {
+  font-size: 0;
+}
+
+.asset-picker[open] .asset-toggle-hint::after {
+  content: "Cerrar ▴";
+  font-size: 0.85rem;
+}
+
+.asset-picker-body {
+  padding: 4px 14px 10px;
+  border-top: 1px solid var(--border);
+}
+
+.asset-picker-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  padding: 8px 0;
+}
+
+.asset-picker-help {
+  font-size: 0.8rem;
+  font-style: italic;
+  color: var(--muted);
+}
+
+/* Cada mercado: su nombre a la izquierda, sus activos a la derecha */
+.asset-row {
+  display: grid;
+  grid-template-columns: 190px 1fr;
+  align-items: start;
+  gap: 10px;
+  padding: 7px 0;
+  border-top: 1px dotted var(--border);
+}
+
+.asset-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+/* Botones del selector: pastillas pequeñas */
+button.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 10px 2px 3px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.85rem;
+  font-weight: normal;
+  line-height: 1.5;
+}
+
+button.chip:hover {
+  border-color: var(--accent);
+}
+
+button.chip.active {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+/* Mercados y "Todos": rectangulares, en versalitas */
+button.chip.market,
+button.chip.all {
+  justify-self: start;
+  padding: 2px 10px;
+  border-radius: 3px;
+  font-variant: small-caps;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+}
+
+/* Mercado elegido solo en parte: borde de acento discontinuo */
+button.chip.market.partial {
+  border-style: dashed;
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Activo sin datos en las fechas elegidas: apagado y tachado */
+button.chip.no-data {
+  opacity: 0.45;
+  text-decoration: line-through;
+}
+
+button.chip .logo-small {
+  width: 18px;
+  height: 18px;
 }
 
 /* Aviso de los filtros: informativo (azul) o que impide jugar (rojo) */
 .settings-warning {
   margin: -4px 0 12px;
   padding: 8px 12px;
-  border-radius: 8px;
+  border-radius: 3px;
   font-size: 0.85rem;
   background: var(--info-bg);
 }
@@ -388,12 +594,18 @@ select {
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 4px;
   box-shadow: var(--shadow);
 }
 
 .panel {
-  padding: 16px;
+  padding: 18px 20px;
+}
+
+/* Títulos de las tarjetas con un filete dorado debajo */
+.panel h2 {
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--gold);
 }
 
 /* Dos columnas: gráfico | panel lateral de 280 px */
@@ -412,8 +624,9 @@ select {
 }
 
 .question {
-  margin: 0 0 12px;
-  font-weight: 500;
+  margin: 0 0 14px;
+  font-size: 1.15rem;
+  font-style: italic;
 }
 
 .hint {
@@ -437,7 +650,7 @@ button {
   font-weight: 600;
   padding: 12px 20px;
   border: none;
-  border-radius: 8px;
+  border-radius: 3px;
   color: #fff;
   cursor: pointer;
   transition: background-color 0.15s;
@@ -457,6 +670,9 @@ button:focus-visible {
 button.primary {
   width: 100%;
   background: var(--accent);
+  color: var(--on-accent);
+  font-variant: small-caps;
+  letter-spacing: 0.06em;
 }
 
 button.primary:hover {
@@ -486,7 +702,9 @@ button.down:hover:enabled {
 
 .buttons button {
   flex: 1; /* los dos botones del mismo ancho */
-  font-size: 1.1rem;
+  font-size: 1.2rem;
+  font-variant: small-caps;
+  letter-spacing: 0.06em;
 }
 
 /* Botón con aspecto de enlace (para acciones secundarias) */
@@ -509,20 +727,20 @@ button.link:hover {
 
 /* Franja de color arriba de la tarjeta según el resultado */
 #result.correct {
-  border-top: 4px solid var(--up);
+  border-top: 3px solid var(--up);
 }
 
 #result.wrong {
-  border-top: 4px solid var(--down);
+  border-top: 3px solid var(--down);
 }
 
 #result.tie {
-  border-top: 4px solid var(--muted);
+  border-top: 3px solid var(--muted);
 }
 
 .result-title {
   margin: 0;
-  font-size: 1.4rem;
+  font-size: 1.6rem;
   font-weight: 700;
 }
 
@@ -555,11 +773,12 @@ button.link:hover {
 }
 
 .badge {
-  padding: 3px 10px;
+  padding: 2px 10px;
+  border: 1px solid var(--gold);
   border-radius: 999px; /* forma de píldora */
   background: var(--info-bg);
   font-size: 0.85rem;
-  font-weight: 600;
+  font-style: italic;
   animation: pop 0.35s ease-out both;
 }
 
@@ -605,6 +824,7 @@ button.link:hover {
   align-items: center;
   justify-content: center;
   border-radius: 50%;
+  font-family: system-ui, sans-serif; /* los emblemas, en letra de palo */
   font-weight: 800;
   letter-spacing: -0.03em;
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
@@ -654,9 +874,9 @@ dl {
 }
 
 dt {
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  font-size: 0.85rem;
+  font-variant: small-caps;
+  letter-spacing: 0.06em;
   color: var(--muted);
 }
 
@@ -676,7 +896,7 @@ dd {
 
 .context h2 {
   margin: 0 0 12px;
-  font-size: 1.1rem;
+  font-size: 1.3rem;
 }
 
 .context-fed {
@@ -695,7 +915,8 @@ dd {
 }
 
 .event-date {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
+  font-style: italic;
   color: var(--muted);
   font-variant-numeric: tabular-nums;
 }
@@ -746,7 +967,7 @@ dd {
 
 .stats h2 {
   margin: 0 0 12px;
-  font-size: 1.1rem;
+  font-size: 1.3rem;
 }
 
 .stats-grid {
@@ -757,26 +978,30 @@ dd {
 
 .stat {
   padding: 10px 12px;
-  border-radius: 8px;
+  border-left: 2px solid var(--gold);
   background: var(--surface-alt);
   color: var(--muted);
   font-size: 0.85rem;
+  font-variant: small-caps;
+  letter-spacing: 0.04em;
 }
 
 .stat-value {
   display: block;
-  font-size: 1.6rem;
-  font-weight: 700;
+  font-size: 2rem;
+  font-weight: 600;
+  font-variant: normal;
+  letter-spacing: 0;
   color: var(--text);
   font-variant-numeric: tabular-nums; /* cifras del mismo ancho */
 }
 
 .chance {
   margin: 16px 0;
-  padding: 12px 14px;
-  border-left: 4px solid var(--accent);
-  border-radius: 6px;
+  padding: 12px 16px;
+  border-left: 3px solid var(--accent);
   background: var(--info-bg);
+  font-style: italic;
 }
 
 .breakdown-header {
@@ -789,8 +1014,10 @@ dd {
 
 .breakdown-header h3 {
   margin: 0;
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 600;
+  font-variant: small-caps;
+  letter-spacing: 0.05em;
 }
 
 /* En móvil, la tabla puede desplazarse en horizontal sin romper la página */
@@ -823,11 +1050,12 @@ td {
 }
 
 th {
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  font-size: 0.85rem;
+  font-variant: small-caps;
+  letter-spacing: 0.06em;
   color: var(--muted);
   font-weight: 600;
+  border-bottom: 1px solid var(--text); /* filete de tinta bajo la cabecera */
 }
 
 .stats-footer {
@@ -853,9 +1081,16 @@ th {
   align-items: center;
 }
 
+.ranking-header {
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--gold);
+}
+
 .ranking-header h2 {
   margin: 0;
-  font-size: 1.1rem;
+  padding: 0;
+  border: none;
+  font-size: 1.3rem;
 }
 
 .join-form {
@@ -869,7 +1104,7 @@ th {
   font: inherit;
   padding: 8px 12px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 3px;
   background: var(--surface);
   color: var(--text);
 }
@@ -877,6 +1112,7 @@ th {
 button.primary-inline {
   padding: 8px 18px;
   background: var(--accent);
+  color: var(--on-accent);
 }
 
 button.primary-inline:hover {
@@ -908,8 +1144,11 @@ td.position {
 
 .footer {
   margin-top: 32px;
+  padding-top: 12px;
+  border-top: 3px double var(--border);
   color: var(--muted);
-  font-size: 0.8rem;
+  font-size: 0.85rem;
+  font-style: italic;
   text-align: center;
 }
 
@@ -927,7 +1166,13 @@ td.position {
   }
 
   .brand {
-    font-size: 1.8rem;
+    font-size: 2.2rem;
+  }
+
+  /* En móvil, el nombre del mercado va encima de sus activos */
+  .asset-row {
+    grid-template-columns: 1fr;
+    gap: 6px;
   }
 
   /* Una sola columna: el panel va debajo del gráfico */

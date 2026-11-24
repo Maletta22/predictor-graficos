@@ -42,7 +42,11 @@ function cssColor(name) {
 // Opciones de color del gráfico y de las velas, según el tema actual
 function chartColors() {
   return {
-    layout: { background: { color: cssColor("--surface") }, textColor: cssColor("--muted") },
+    layout: {
+      background: { color: cssColor("--surface") },
+      textColor: cssColor("--muted"),
+      fontFamily: cssColor("--font-serif"), // la misma letra que la página
+    },
     grid: {
       vertLines: { color: cssColor("--grid") },
       horzLines: { color: cssColor("--grid") },

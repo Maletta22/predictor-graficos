@@ -72,12 +72,15 @@ const nextButton = document.getElementById("next-round");
 
 // Elementos de los ajustes
 const revealOptions = document.getElementById("reveal-options");
-const assetSelect = document.getElementById("asset-select");
+const assetPicker = document.getElementById("asset-picker");
+const assetSummary = document.getElementById("asset-summary");
+const assetTable = document.getElementById("asset-table");
+const assetAllButton = document.getElementById("asset-all");
 const fromYearSelect = document.getElementById("from-year");
 const toYearSelect = document.getElementById("to-year");
 const settingsWarning = document.getElementById("settings-warning");
 
-// Lista de activos (data/index.json), para los filtros. La rellena fillAssetSelect().
+// Lista de activos (data/index.json), para los filtros. La rellena fillAssetPicker().
 let assetList = [];
 
 // ¿Están los filtros impidiendo jugar? (activo sin datos en esas fechas...)
@@ -131,7 +134,7 @@ let stats = loadStats();
 let breakdownGroup = "byMarket";
 
 // Nombre de cada activo por su ticker ("GOLD" → "Oro (fondo GLD)"),
-// para la tabla por activo. Lo rellena fillAssetSelect().
+// para la tabla por activo. Lo rellena fillAssetPicker().
 const assetNames = {};
 const settings = loadSettings();
 
@@ -213,7 +216,7 @@ async function newRound() {
   }
 
   try {
-    currentRound = await pickRandomRound(settings.revealCount, settings.ticker, currentRange());
+    currentRound = await pickRandomRound(settings.revealCount, settings.tickers, currentRange());
     question.textContent =
       `¿Qué hará el precio en las próximas ${currentRound.hidden.length} velas?`;
     drawCandles(currentRound.visible);
@@ -563,7 +566,7 @@ function filterProblem() {
     return { blocking: true, text: "⚠️ El año «desde» es posterior al año «hasta»." };
   }
 
-  const candidates = assetsForChoice(assetList, settings.ticker);
+  const candidates = assetsForChoice(assetList, settings.tickers);
   const available = candidates.filter((a) => isAssetAvailable(a, currentRange(), candlesNeeded()));
 
   if (available.length === 0 && candidates.length === 1) {
@@ -591,18 +594,129 @@ function filterProblem() {
   return null;
 }
 
-// Desactiva en el desplegable los activos (y mercados) sin datos en esas fechas
-function updateAssetOptions() {
-  for (const option of assetSelect.querySelectorAll("option")) {
-    if (option.value === "") {
-      continue; // "Aleatorio (todos)" siempre se puede elegir
-    }
-    const assets = assetsForChoice(assetList, option.value);
-    const hasData = assets.some((a) => isAssetAvailable(a, currentRange(), candlesNeeded()));
-    option.disabled = !hasData;
-    // El nombre original se guarda en data-label para poder añadirle la nota
-    option.textContent = option.dataset.label + (hasData ? "" : " — sin datos en esas fechas");
+// ---------------------------------------------------------------------------
+// Selector de activos: una fila por mercado, con un botón para el mercado
+// entero y otro para cada activo. Se pueden elegir varios a la vez, de
+// mercados distintos (p. ej. Crypto entera + Apple + EUR/USD).
+// La elección se guarda en settings.tickers ([] = todos).
+// ---------------------------------------------------------------------------
+
+// ¿Tiene el activo datos suficientes en las fechas elegidas?
+function hasDataInRange(asset) {
+  return isAssetAvailable(asset, currentRange(), candlesNeeded());
+}
+
+// Activos de un mercado
+function assetsOfMarket(market) {
+  return assetList.filter((a) => a.market === market);
+}
+
+// Guarda una nueva lista de activos elegidos. Si están todos, se guarda []
+// ("todos"), que significa lo mismo.
+function setChosenTickers(tickers) {
+  const unique = [...new Set(tickers)]; // sin repetidos
+  changeSetting("tickers", unique.length === assetList.length ? [] : unique);
+}
+
+// Clic en un activo: lo añade o lo quita de la selección
+function toggleAsset(ticker) {
+  const chosen = settings.tickers;
+  if (chosen.includes(ticker)) {
+    setChosenTickers(chosen.filter((t) => t !== ticker));
+  } else {
+    setChosenTickers([...chosen, ticker]);
   }
+}
+
+// Clic en un mercado: si ya estaba entero, se quita; si no, se añade entero
+function toggleMarket(market) {
+  const marketTickers = assetsOfMarket(market).map((a) => a.ticker);
+  const chosen = settings.tickers;
+  const isComplete = marketTickers.every((t) => chosen.includes(t));
+  if (isComplete) {
+    setChosenTickers(chosen.filter((t) => !marketTickers.includes(t)));
+  } else {
+    setChosenTickers([...chosen, ...marketTickers]);
+  }
+}
+
+// Texto resumen de la selección: "Todos (34)", "Crypto, Apple y Euro / Dólar"...
+// Los mercados elegidos enteros se nombran por el mercado, no activo a activo.
+function selectionSummary() {
+  if (settings.tickers.length === 0) {
+    return `Todos (${assetList.length})`;
+  }
+  const parts = [];
+  for (const market of Object.keys(MARKET_NAMES)) {
+    const inMarket = assetsOfMarket(market);
+    const chosen = inMarket.filter((a) => settings.tickers.includes(a.ticker));
+    if (chosen.length > 0 && chosen.length === inMarket.length) {
+      parts.push(MARKET_NAMES[market]);
+    } else {
+      parts.push(...chosen.map((a) => a.name));
+    }
+  }
+  if (parts.length > 4) {
+    return `${parts.slice(0, 3).join(", ")} y ${parts.length - 3} más`;
+  }
+  if (parts.length > 1) {
+    return `${parts.slice(0, -1).join(", ")} y ${parts[parts.length - 1]}`;
+  }
+  return parts[0];
+}
+
+// Marca en el selector lo elegido y los activos sin datos en esas fechas
+function renderAssetPicker() {
+  const chosen = settings.tickers;
+  const all = chosen.length === 0;
+  assetAllButton.classList.toggle("active", all);
+  assetAllButton.setAttribute("aria-pressed", all);
+  assetSummary.textContent = assetList.length === 0 ? "" : selectionSummary();
+
+  for (const chip of assetTable.querySelectorAll("[data-ticker]")) {
+    const isChosen = chosen.includes(chip.dataset.ticker);
+    chip.classList.toggle("active", isChosen);
+    chip.setAttribute("aria-pressed", isChosen);
+    const asset = assetList.find((a) => a.ticker === chip.dataset.ticker);
+    const noData = !hasDataInRange(asset);
+    chip.classList.toggle("no-data", noData); // se ve tachado y apagado
+    chip.title = noData
+      ? `Sin datos en esas fechas (los hay de ${asset.first.slice(0, 4)} a ${asset.last.slice(0, 4)})`
+      : `Datos desde ${asset.first.slice(0, 4)}`;
+  }
+  for (const chip of assetTable.querySelectorAll("[data-market]")) {
+    const marketTickers = assetsOfMarket(chip.dataset.market).map((a) => a.ticker);
+    const count = marketTickers.filter((t) => chosen.includes(t)).length;
+    // Mercado entero (active), solo una parte (partial) o nada
+    chip.classList.toggle("active", count === marketTickers.length);
+    chip.classList.toggle("partial", count > 0 && count < marketTickers.length);
+    chip.setAttribute("aria-pressed", count === marketTickers.length);
+  }
+}
+
+// Crea un botón del selector
+//   data: { ticker: "AAPL" } o { market: "crypto" } → data-ticker / data-market
+function chipButton(className, text, data) {
+  const button = element("button", `chip ${className}`, text);
+  button.type = "button";
+  Object.assign(button.dataset, data);
+  return button;
+}
+
+// Ajustes guardados con la versión anterior ("ticker", un solo valor):
+//   "" → []   "AAPL" → ["AAPL"]   "market:crypto" → los activos de crypto
+function migrateOldTickerSetting() {
+  if (!("ticker" in settings)) {
+    return;
+  }
+  const old = settings.ticker;
+  delete settings.ticker;
+  if (old.startsWith("market:")) {
+    settings.tickers = assetsOfMarket(old.slice("market:".length)).map((a) => a.ticker);
+  } else if (old !== "") {
+    settings.tickers = [old];
+  }
+  saveSettings(settings);
 }
 
 // Marca en la página los ajustes actuales
@@ -612,12 +726,11 @@ function renderSettings() {
     button.classList.toggle("active", isActive);
     button.setAttribute("aria-pressed", isActive);
   }
-  assetSelect.value = settings.ticker;
   fromYearSelect.value = settings.fromYear;
   toYearSelect.value = settings.toYear;
 
-  // Activos sin datos en el rango, y aviso si hay algún problema
-  updateAssetOptions();
+  // Activos elegidos y sin datos en el rango, y aviso si hay algún problema
+  renderAssetPicker();
   const problem = filterProblem();
   settingsWarning.textContent = problem === null ? "" : problem.text;
   settingsWarning.classList.toggle("blocking", problem !== null && problem.blocking);
@@ -674,43 +787,57 @@ function onRevealOptionClick(event) {
   }
 }
 
-// Crea una opción del desplegable (data-label guarda el texto original)
+// Crea una opción de un desplegable (los de los años)
 function selectOption(value, text) {
   const option = document.createElement("option");
   option.value = value;
   option.textContent = text;
-  option.dataset.label = text;
   return option;
 }
 
-// Rellena el desplegable con los activos de data/index.json, agrupados por
-// mercado (<optgroup>). En cada grupo, primero "cualquiera de ese mercado"
-// (valor "market:acciones"...) y luego cada activo (valor "SPX"...).
-// También guarda los nombres para la tabla de estadísticas.
-async function fillAssetSelect() {
+// Crea el selector de activos a partir de data/index.json: una fila por
+// mercado. También guarda los nombres para la tabla de estadísticas.
+async function fillAssetPicker() {
   const assets = await loadAssetList();
   assetList = assets;
   fillYearSelects(assets);
-  const validChoices = [""]; // "" = aleatorio entre todos
   for (const market of Object.keys(MARKET_NAMES)) {
-    const group = document.createElement("optgroup");
-    group.label = MARKET_NAMES[market];
-    group.appendChild(selectOption(`market:${market}`, `🎲 Cualquiera de ${MARKET_NAMES[market]}`));
-    validChoices.push(`market:${market}`);
-    for (const asset of assets.filter((a) => a.market === market)) {
-      group.appendChild(selectOption(asset.ticker, asset.name));
-      validChoices.push(asset.ticker);
+    const row = element("div", "asset-row", "");
+    row.appendChild(chipButton("market", MARKET_NAMES[market], { market }));
+    const chips = element("div", "asset-chips", "");
+    for (const asset of assetsOfMarket(market)) {
+      const chip = chipButton("asset", "", { ticker: asset.ticker });
+      chip.appendChild(createLogo(asset.ticker, asset.name, "small"));
+      chip.appendChild(document.createTextNode(asset.name));
+      chips.appendChild(chip);
       assetNames[asset.ticker] = asset.name;
     }
-    assetSelect.appendChild(group);
+    row.appendChild(chips);
+    assetTable.appendChild(row);
   }
   renderStats(); // ahora la tabla "por activo" ya puede mostrar los nombres
   fillTicker(tickerTrack, assets); // cinta decorativa de arriba
-  // Si la opción guardada ya no existe, volver a "Aleatorio"
-  if (!validChoices.includes(settings.ticker)) {
-    settings.ticker = "";
-  }
+
+  migrateOldTickerSetting();
+  // Quitar activos guardados que ya no existen (p. ej. si se quita uno del script)
+  const valid = settings.tickers.filter((t) => assets.some((a) => a.ticker === t));
+  settings.tickers = valid.length === assets.length ? [] : valid;
   renderSettings();
+}
+
+// Clic dentro del selector: en "Todos", en un mercado o en un activo
+function onAssetPickerClick(event) {
+  const chip = event.target.closest("button");
+  if (chip === null || assetList.length === 0) {
+    return;
+  }
+  if (chip === assetAllButton) {
+    changeSetting("tickers", []);
+  } else if (chip.dataset.market) {
+    toggleMarket(chip.dataset.market);
+  } else if (chip.dataset.ticker) {
+    toggleAsset(chip.dataset.ticker);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -854,7 +981,7 @@ breakdownTabs.addEventListener("click", onBreakdownTabClick);
 soundToggle.addEventListener("click", onSoundToggle);
 joinForm.addEventListener("submit", onJoinSubmit);
 rankingRefresh.addEventListener("click", renderRanking);
-assetSelect.addEventListener("change", () => changeSetting("ticker", assetSelect.value));
+assetPicker.addEventListener("click", onAssetPickerClick);
 fromYearSelect.addEventListener("change", onYearChange);
 toYearSelect.addEventListener("change", onYearChange);
 document.addEventListener("keydown", onKeyDown);
@@ -863,7 +990,7 @@ renderSettings();
 renderStats();
 // Primera ronda al abrir la página, cuando ya está la lista de activos
 // (hace falta para comprobar los filtros). Si falla, se juega igualmente.
-fillAssetSelect()
+fillAssetPicker()
   .catch((error) => console.warn("No se pudo cargar la lista de activos:", error))
   .finally(newRound);
 
