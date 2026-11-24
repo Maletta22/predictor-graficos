@@ -20,12 +20,12 @@
   --accent-hover: #3b5574;
   --on-accent: #fffcf5;   /* texto sobre el color de acento */
   --gold: #c2a56f;        /* filetes y detalles dorados */
-  --up: #4f9478;          /* verde: sube */
-  --up-hover: #418066;
-  --down: #bf6670;        /* granate: baja */
-  --down-hover: #a9545e;
-  --up-soft: rgba(79, 148, 120, 0.35);   /* velas reveladas que suben */
-  --down-soft: rgba(191, 102, 112, 0.35); /* velas reveladas que bajan */
+  --up: #12a06b;          /* verde vivo: sube */
+  --up-hover: #0e8758;
+  --down: #e23d4e;        /* rojo vivo: baja */
+  --down-hover: #c62e3f;
+  --up-soft: rgba(18, 160, 107, 0.35);   /* velas reveladas que suben */
+  --down-soft: rgba(226, 61, 78, 0.35); /* velas reveladas que bajan */
   --info-bg: #f3efe6;     /* fondo de la frase de la moneda */
   --tape-bg: #f1ece2;     /* cinta de activos de arriba */
   --tape-text: #787264;
@@ -48,12 +48,12 @@
     --accent-hover: #d3bc92;
     --on-accent: #11161f;
     --gold: #a89068;
-    --up: #5fae8c;
-    --up-hover: #72bf9e;
-    --down: #d27880;
-    --down-hover: #de8c94;
-    --up-soft: rgba(95, 174, 140, 0.4);
-    --down-soft: rgba(210, 120, 128, 0.4);
+    --up: #22c084;
+    --up-hover: #3dd398;
+    --down: #f2525f;
+    --down-hover: #ff6b77;
+    --up-soft: rgba(34, 192, 132, 0.4);
+    --down-soft: rgba(242, 82, 95, 0.4);
     --info-bg: #212938;
     --tape-bg: #181e27;
     --tape-text: #a59e90;

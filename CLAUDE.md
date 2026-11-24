@@ -101,7 +101,8 @@ consistente es muy difícil y comparar su resultado con el azar (50 %).
   activos arriba; sonidos al acertar/fallar con botón 🔊/🔇 (se guarda).
 - Estilo visual suave y elegante: letra Times New Roman (sin fuentes
   externas) con tamaño base de 17 px (`html { font-size: 17px }`), papel
-  cálido y tinta gris azulada, colores apagados, detalles dorados discretos,
+  cálido y tinta gris azulada, detalles dorados discretos, pero verde y rojo
+  (velas, Sube/Baja, logotipo) VIVOS (#12a06b / #e23d4e),
   esquinas redondeadas, cabecera centrada con una línea fina. Sin versalitas
   (el usuario las vio "agresivas" y pequeñas). En modo oscuro, tonos de
   pizarra con acento dorado apagado (`--on-accent` = texto sobre el acento).
