@@ -4,179 +4,305 @@
     "name": "Bitcoin / USD",
     "market": "crypto",
     "file": "BTCUSDT.json",
-    "count": 3381,
+    "count": 3386,
     "first": "2017-08-17",
-    "last": "2026-11-18"
+    "last": "2026-11-23"
   },
   {
     "ticker": "ETHUSDT",
     "name": "Ethereum / USD",
     "market": "crypto",
     "file": "ETHUSDT.json",
-    "count": 3381,
+    "count": 3386,
     "first": "2017-08-17",
-    "last": "2026-11-18"
+    "last": "2026-11-23"
   },
   {
     "ticker": "SOLUSDT",
     "name": "Solana / USD",
     "market": "crypto",
     "file": "SOLUSDT.json",
-    "count": 2291,
+    "count": 2296,
     "first": "2020-08-11",
-    "last": "2026-11-18"
+    "last": "2026-11-23"
   },
   {
     "ticker": "SPX",
     "name": "S&P 500",
-    "market": "bolsa",
+    "market": "indices",
     "file": "SPX.json",
-    "count": 16292,
+    "count": 16295,
     "first": "1962-01-02",
-    "last": "2026-11-18"
+    "last": "2026-11-23"
   },
   {
     "ticker": "NDX",
     "name": "Nasdaq 100",
-    "market": "bolsa",
+    "market": "indices",
     "file": "NDX.json",
-    "count": 10363,
+    "count": 10366,
     "first": "1985-10-01",
-    "last": "2026-11-18"
+    "last": "2026-11-23"
   },
   {
     "ticker": "STOXX50",
     "name": "Euro Stoxx 50",
-    "market": "bolsa",
+    "market": "indices",
     "file": "STOXX50.json",
-    "count": 4916,
+    "count": 4919,
     "first": "2007-03-30",
-    "last": "2026-11-18"
+    "last": "2026-11-23"
   },
   {
     "ticker": "DAX",
     "name": "DAX (Alemania)",
-    "market": "bolsa",
+    "market": "indices",
     "file": "DAX.json",
-    "count": 8345,
+    "count": 8348,
     "first": "1993-12-14",
-    "last": "2026-11-18"
+    "last": "2026-11-23"
   },
   {
     "ticker": "IBEX",
     "name": "IBEX 35",
-    "market": "bolsa",
+    "market": "indices",
     "file": "IBEX.json",
-    "count": 8454,
+    "count": 8457,
     "first": "1993-07-12",
-    "last": "2026-11-18"
+    "last": "2026-11-23"
   },
   {
     "ticker": "N225",
     "name": "Nikkei 225 (Japón)",
-    "market": "bolsa",
+    "market": "indices",
     "file": "N225.json",
-    "count": 9475,
+    "count": 9477,
     "first": "1988-04-08",
-    "last": "2026-11-18"
+    "last": "2026-11-20"
   },
   {
     "ticker": "AAPL",
     "name": "Apple",
-    "market": "bolsa",
+    "market": "acciones",
     "file": "AAPL.json",
-    "count": 11549,
+    "count": 11552,
     "first": "1980-12-12",
-    "last": "2026-11-18"
+    "last": "2026-11-23"
+  },
+  {
+    "ticker": "MSFT",
+    "name": "Microsoft",
+    "market": "acciones",
+    "file": "MSFT.json",
+    "count": 10254,
+    "first": "1986-03-13",
+    "last": "2026-11-23"
+  },
+  {
+    "ticker": "NVDA",
+    "name": "NVIDIA",
+    "market": "acciones",
+    "file": "NVDA.json",
+    "count": 7003,
+    "first": "1999-01-22",
+    "last": "2026-11-23"
+  },
+  {
+    "ticker": "AMZN",
+    "name": "Amazon",
+    "market": "acciones",
+    "file": "AMZN.json",
+    "count": 7428,
+    "first": "1997-05-15",
+    "last": "2026-11-23"
+  },
+  {
+    "ticker": "GOOGL",
+    "name": "Alphabet (Google)",
+    "market": "acciones",
+    "file": "GOOGL.json",
+    "count": 5602,
+    "first": "2004-08-19",
+    "last": "2026-11-23"
+  },
+  {
+    "ticker": "META",
+    "name": "Meta (Facebook)",
+    "market": "acciones",
+    "file": "META.json",
+    "count": 3650,
+    "first": "2012-05-18",
+    "last": "2026-11-23"
+  },
+  {
+    "ticker": "TSLA",
+    "name": "Tesla",
+    "market": "acciones",
+    "file": "TSLA.json",
+    "count": 4127,
+    "first": "2010-06-29",
+    "last": "2026-11-23"
+  },
+  {
+    "ticker": "NFLX",
+    "name": "Netflix",
+    "market": "acciones",
+    "file": "NFLX.json",
+    "count": 6166,
+    "first": "2002-05-23",
+    "last": "2026-11-23"
+  },
+  {
+    "ticker": "JPM",
+    "name": "JPMorgan Chase",
+    "market": "acciones",
+    "file": "JPM.json",
+    "count": 11768,
+    "first": "1980-03-17",
+    "last": "2026-11-23"
+  },
+  {
+    "ticker": "KO",
+    "name": "Coca-Cola",
+    "market": "acciones",
+    "file": "KO.json",
+    "count": 16325,
+    "first": "1962-01-02",
+    "last": "2026-11-23"
   },
   {
     "ticker": "SAN",
     "name": "Banco Santander",
-    "market": "bolsa",
+    "market": "acciones",
     "file": "SAN.json",
-    "count": 6823,
+    "count": 6826,
     "first": "2000-01-03",
-    "last": "2026-11-18"
+    "last": "2026-11-23"
+  },
+  {
+    "ticker": "ITX",
+    "name": "Inditex",
+    "market": "acciones",
+    "file": "ITX.json",
+    "count": 6482,
+    "first": "2001-05-24",
+    "last": "2026-11-23"
+  },
+  {
+    "ticker": "ASML",
+    "name": "ASML (Países Bajos)",
+    "market": "acciones",
+    "file": "ASML.json",
+    "count": 6878,
+    "first": "2000-01-03",
+    "last": "2026-11-23"
+  },
+  {
+    "ticker": "LVMH",
+    "name": "LVMH (Francia)",
+    "market": "acciones",
+    "file": "LVMH.json",
+    "count": 6874,
+    "first": "2000-01-03",
+    "last": "2026-11-23"
+  },
+  {
+    "ticker": "TSM",
+    "name": "TSMC (Taiwán)",
+    "market": "acciones",
+    "file": "TSM.json",
+    "count": 7326,
+    "first": "1997-10-09",
+    "last": "2026-11-23"
+  },
+  {
+    "ticker": "TM",
+    "name": "Toyota (Japón)",
+    "market": "acciones",
+    "file": "TM.json",
+    "count": 6709,
+    "first": "1999-05-06",
+    "last": "2026-11-20"
   },
   {
     "ticker": "EURUSD",
     "name": "Euro / Dólar",
     "market": "forex",
     "file": "EURUSD.json",
-    "count": 5944,
+    "count": 5947,
     "first": "2003-12-01",
-    "last": "2026-11-17"
+    "last": "2026-11-20"
   },
   {
     "ticker": "GBPUSD",
     "name": "Libra / Dólar",
     "market": "forex",
     "file": "GBPUSD.json",
-    "count": 5953,
+    "count": 5956,
     "first": "2003-12-01",
-    "last": "2026-11-17"
+    "last": "2026-11-20"
   },
   {
     "ticker": "USDJPY",
     "name": "Dólar / Yen",
     "market": "forex",
     "file": "USDJPY.json",
-    "count": 7782,
+    "count": 7785,
     "first": "1996-10-30",
-    "last": "2026-11-17"
+    "last": "2026-11-20"
   },
   {
     "ticker": "USDCHF",
     "name": "Dólar / Franco suizo",
     "market": "forex",
     "file": "USDCHF.json",
-    "count": 6010,
+    "count": 6013,
     "first": "2003-09-17",
-    "last": "2026-11-17"
+    "last": "2026-11-20"
   },
   {
     "ticker": "AUDUSD",
     "name": "Dólar australiano / Dólar",
     "market": "forex",
     "file": "AUDUSD.json",
-    "count": 5321,
+    "count": 5324,
     "first": "2006-05-16",
-    "last": "2026-11-17"
+    "last": "2026-11-20"
   },
   {
     "ticker": "EURGBP",
     "name": "Euro / Libra",
     "market": "forex",
     "file": "EURGBP.json",
-    "count": 7249,
+    "count": 7252,
     "first": "1999-01-04",
-    "last": "2026-11-17"
+    "last": "2026-11-20"
   },
   {
     "ticker": "GOLD",
     "name": "Oro (fondo GLD)",
     "market": "materias",
     "file": "GOLD.json",
-    "count": 5535,
+    "count": 5538,
     "first": "2004-11-18",
-    "last": "2026-11-18"
+    "last": "2026-11-23"
   },
   {
     "ticker": "SILVER",
     "name": "Plata (fondo SLV)",
     "market": "materias",
     "file": "SILVER.json",
-    "count": 5173,
+    "count": 5176,
     "first": "2006-04-28",
-    "last": "2026-11-18"
+    "last": "2026-11-23"
   },
   {
     "ticker": "BRENT",
     "name": "Petróleo Brent",
     "market": "materias",
     "file": "BRENT.json",
-    "count": 4719,
+    "count": 4722,
     "first": "2007-07-30",
-    "last": "2026-11-18"
+    "last": "2026-11-23"
   }
 ]

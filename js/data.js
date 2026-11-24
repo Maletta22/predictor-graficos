@@ -105,11 +105,11 @@ export function rangeFromYears(fromYear, toYear) {
 
 // Activos que encajan con lo elegido en el desplegable:
 //   ""              → todos (aleatorio)
-//   "market:bolsa"  → los de ese mercado
+//   "market:acciones"  → los de ese mercado
 //   "SPX"           → solo ese activo
 export function assetsForChoice(assets, choice) {
   if (choice.startsWith("market:")) {
-    const market = choice.slice("market:".length); // "market:bolsa" → "bolsa"
+    const market = choice.slice("market:".length); // "market:acciones" → "acciones"
     return assets.filter((a) => a.market === market);
   }
   if (choice !== "") {
@@ -136,7 +136,7 @@ export function isAssetAvailable(info, range, totalCandles) {
 
 // Elige un activo y un fragmento al azar.
 //   revealCount: cuántas velas se revelarán después (10, 20, 30 o 50)
-//   choice: qué activos pueden salir ("" / "market:bolsa" / "SPX", ver arriba)
+//   choice: qué activos pueden salir ("" / "market:acciones" / "SPX", ver arriba)
 //   range: rango de fechas { from, to } (ver rangeFromYears)
 // Devuelve:
 //   visible: las 60 velas que ve el usuario (normalizadas)

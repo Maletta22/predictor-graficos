@@ -21,7 +21,7 @@ let rates = null; // { fed: {...}, ecb: {...} }
 let events = null; // [ { date, markets, title, text }, ... ]
 
 // Activos europeos o con el euro: en ellos se muestran también los tipos del BCE
-const ECB_TICKERS = ["EURUSD", "EURGBP", "STOXX50", "DAX", "IBEX", "SAN"];
+const ECB_TICKERS = ["EURUSD", "EURGBP", "STOXX50", "DAX", "IBEX", "SAN", "ITX", "ASML", "LVMH"];
 
 export function isEcbRelevant(ticker) {
   return ECB_TICKERS.includes(ticker);
@@ -74,8 +74,12 @@ export function describeRates(bank, firstDate, lastDate) {
   return { start, end, trend };
 }
 
-// Eventos entre dos fechas que afectan a un mercado ("bolsa", "forex", "crypto")
+// Eventos entre dos fechas que afectan a un mercado.
+// En events.json, "bolsa" vale tanto para los índices como para las acciones.
 export function eventsInRange(firstDate, lastDate, market) {
+  if (market === "indices" || market === "acciones") {
+    market = "bolsa";
+  }
   return events.filter(
     (event) =>
       event.date >= firstDate &&

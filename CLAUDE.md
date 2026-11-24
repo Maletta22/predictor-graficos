@@ -75,8 +75,9 @@ consistente es muy difícil y comparar su resultado con el azar (50 %).
 
 - Rondas jugadas, aciertos, % de acierto, racha actual y mejor racha.
 - Totales comunes (aciertos y fallos de todas las rondas) y, debajo, una tabla
-  de **detalle** con pestañas: por **mercado** (bolsa / FOREX / crypto /
-  materias primas), por **plazo** (10 / 20 / 30 / 50 velas reveladas) o por
+  de **detalle** con pestañas: por **mercado** (índices / acciones / FOREX /
+  crypto / materias primas; las rondas guardadas con el antiguo mercado
+  `bolsa` salen en una fila «Bolsa (rondas antiguas)»), por **plazo** (10 / 20 / 30 / 50 velas reveladas) o por
   **activo**. Cada fila incluye su propia comparación con la moneda y un aviso
   de que con menos de ~30 rondas por grupo no hay que sacar conclusiones.
 - Formato guardado: `byMarket`, `byHorizon` y `byAsset`, cada uno
@@ -157,9 +158,15 @@ consistente es muy difícil y comparar su resultado con el azar (50 %).
 | Tipos de la FED | FRED (serie `FEDFUNDS`, pública, sin cuenta) | Python + `requests` |
 | Tipos del BCE | FRED (serie `ECBDFR`, facilidad de depósito, desde 1999) | Python + `requests` |
 
-Activos incluidos (20), en la lista `ASSETS` de `download_data.py`:
+Activos incluidos (34), en la lista `ASSETS` de `download_data.py`:
 - **Crypto**: Bitcoin, Ethereum, Solana.
-- **Bolsa**: S&P 500, Nasdaq 100, Euro Stoxx 50, DAX, IBEX 35, Nikkei 225, Apple, Santander.
+- **Índices bursátiles** (`market: "indices"`): S&P 500, Nasdaq 100, Euro Stoxx 50,
+  DAX, IBEX 35, Nikkei 225.
+- **Acciones de empresas** (`market: "acciones"`): Apple, Microsoft, NVIDIA,
+  Amazon, Alphabet, Meta, Tesla, Netflix, JPMorgan, Coca-Cola, Santander,
+  Inditex, ASML, LVMH, TSMC (ADR en EE. UU.), Toyota.
+  Antes índices y acciones eran un único mercado `bolsa`; `events.json` sigue
+  usando `"bolsa"`, que `eventsInRange` aplica a los dos.
 - **FOREX**: EUR/USD, GBP/USD, USD/JPY, USD/CHF, AUD/USD, EUR/GBP.
 - **Materias primas** (`market: "materias"`): oro, plata y petróleo Brent.
 
@@ -217,7 +224,7 @@ pública con fines comerciales, revisar licencias.
     - Librería `@supabase/supabase-js@2.118.0` desde CDN, que solo se carga si
       `config.js` está relleno.
   - [x] Tipos del BCE en el contexto de los activos europeos o con euro
-    (EUR/USD, EUR/GBP, Euro Stoxx 50, DAX, IBEX 35, Santander).
+    (EUR/USD, EUR/GBP, Euro Stoxx 50, DAX, IBEX 35, Santander, Inditex, ASML, LVMH).
   - Más activos: bolsas emergentes (pendiente; el resto de la ampliación está hecha).
   - **Noticias del periodo tras responder** (objetivo: pasar de "juego" a
     herramienta educativa). Solo se muestra *después* de responder, porque antes

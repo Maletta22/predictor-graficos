@@ -36,7 +36,7 @@ MIN_YEARS = 5
 #   ticker: nombre corto que usamos nosotros (y nombre del archivo .json)
 #   source: de dónde se descarga ("binance" o "yahoo")
 #   symbol: cómo se llama el activo en esa fuente
-#   market: "crypto", "bolsa", "forex" o "materias" (materias primas)
+#   market: "crypto", "indices", "acciones", "forex" o "materias" (materias primas)
 ASSETS = [
     # --- Crypto (Binance) ---
     {"ticker": "BTCUSDT", "name": "Bitcoin / USD", "market": "crypto",
@@ -46,25 +46,63 @@ ASSETS = [
     {"ticker": "SOLUSDT", "name": "Solana / USD", "market": "crypto",
      "source": "binance", "symbol": "SOLUSDT"},
 
-    # --- Bolsa: índices (Yahoo Finance) ---
-    {"ticker": "SPX", "name": "S&P 500", "market": "bolsa",
+    # --- Índices bursátiles (Yahoo Finance) ---
+    # Un índice no es una empresa ni un fondo: es la media ponderada de las
+    # acciones de un grupo de empresas (p. ej. las 500 más grandes de EE. UU.).
+    {"ticker": "SPX", "name": "S&P 500", "market": "indices",
      "source": "yahoo", "symbol": "^GSPC"},
-    {"ticker": "NDX", "name": "Nasdaq 100", "market": "bolsa",
+    {"ticker": "NDX", "name": "Nasdaq 100", "market": "indices",
      "source": "yahoo", "symbol": "^NDX"},
-    {"ticker": "STOXX50", "name": "Euro Stoxx 50", "market": "bolsa",
+    {"ticker": "STOXX50", "name": "Euro Stoxx 50", "market": "indices",
      "source": "yahoo", "symbol": "^STOXX50E"},
-    {"ticker": "DAX", "name": "DAX (Alemania)", "market": "bolsa",
+    {"ticker": "DAX", "name": "DAX (Alemania)", "market": "indices",
      "source": "yahoo", "symbol": "^GDAXI"},
-    {"ticker": "IBEX", "name": "IBEX 35", "market": "bolsa",
+    {"ticker": "IBEX", "name": "IBEX 35", "market": "indices",
      "source": "yahoo", "symbol": "^IBEX"},
-    {"ticker": "N225", "name": "Nikkei 225 (Japón)", "market": "bolsa",
+    {"ticker": "N225", "name": "Nikkei 225 (Japón)", "market": "indices",
      "source": "yahoo", "symbol": "^N225"},
 
-    # --- Bolsa: acciones ---
-    {"ticker": "AAPL", "name": "Apple", "market": "bolsa",
+    # --- Acciones de empresas (Yahoo Finance) ---
+    # Los precios de Yahoo ya vienen ajustados por "splits" (cuando una
+    # acción se divide en varias, p. ej. NVIDIA 10 por 1 en 2024): si no,
+    # el gráfico mostraría una caída falsa del 90 % ese día.
+    # Estados Unidos: las grandes tecnológicas y algunos clásicos
+    {"ticker": "AAPL", "name": "Apple", "market": "acciones",
      "source": "yahoo", "symbol": "AAPL"},
-    {"ticker": "SAN", "name": "Banco Santander", "market": "bolsa",
+    {"ticker": "MSFT", "name": "Microsoft", "market": "acciones",
+     "source": "yahoo", "symbol": "MSFT"},
+    {"ticker": "NVDA", "name": "NVIDIA", "market": "acciones",
+     "source": "yahoo", "symbol": "NVDA"},
+    {"ticker": "AMZN", "name": "Amazon", "market": "acciones",
+     "source": "yahoo", "symbol": "AMZN"},
+    {"ticker": "GOOGL", "name": "Alphabet (Google)", "market": "acciones",
+     "source": "yahoo", "symbol": "GOOGL"},
+    {"ticker": "META", "name": "Meta (Facebook)", "market": "acciones",
+     "source": "yahoo", "symbol": "META"},
+    {"ticker": "TSLA", "name": "Tesla", "market": "acciones",
+     "source": "yahoo", "symbol": "TSLA"},
+    {"ticker": "NFLX", "name": "Netflix", "market": "acciones",
+     "source": "yahoo", "symbol": "NFLX"},
+    {"ticker": "JPM", "name": "JPMorgan Chase", "market": "acciones",
+     "source": "yahoo", "symbol": "JPM"},
+    {"ticker": "KO", "name": "Coca-Cola", "market": "acciones",
+     "source": "yahoo", "symbol": "KO"},
+    # Europa
+    {"ticker": "SAN", "name": "Banco Santander", "market": "acciones",
      "source": "yahoo", "symbol": "SAN.MC"},
+    {"ticker": "ITX", "name": "Inditex", "market": "acciones",
+     "source": "yahoo", "symbol": "ITX.MC"},
+    # "start": antes del año 2000, Yahoo tiene los precios de ASML en otra
+    # escala (el 3 de enero de 2000 "sube" un 212 %), así que empezamos ahí.
+    {"ticker": "ASML", "name": "ASML (Países Bajos)", "market": "acciones",
+     "source": "yahoo", "symbol": "ASML.AS", "start": "2000-01-03"},
+    {"ticker": "LVMH", "name": "LVMH (Francia)", "market": "acciones",
+     "source": "yahoo", "symbol": "MC.PA"},
+    # Asia
+    {"ticker": "TSM", "name": "TSMC (Taiwán)", "market": "acciones",
+     "source": "yahoo", "symbol": "TSM"},
+    {"ticker": "TM", "name": "Toyota (Japón)", "market": "acciones",
+     "source": "yahoo", "symbol": "7203.T"},
 
     # --- FOREX (Yahoo Finance) ---
     {"ticker": "EURUSD", "name": "Euro / Dólar", "market": "forex",
@@ -291,10 +329,22 @@ def main():
     for asset in ASSETS:
         print(f"Descargando {asset['name']} ({asset['symbol']})...")
 
-        if asset["source"] == "binance":
-            raw = download_binance(asset["symbol"])
-        else:
-            raw = download_yahoo(asset["symbol"])
+        # A veces Yahoo falla y no devuelve nada (p. ej. "possibly delisted"
+        # con el Nikkei, que sí existe). Lo reintentamos hasta 3 veces.
+        raw = []
+        for attempt in range(1, 4):
+            if asset["source"] == "binance":
+                raw = download_binance(asset["symbol"])
+            else:
+                raw = download_yahoo(asset["symbol"])
+            if raw:
+                break
+            print(f"  Sin datos en el intento {attempt} de 3; reintentando...")
+            time.sleep(5)
+
+        # Fecha de inicio opcional, para saltarse datos antiguos erróneos
+        if "start" in asset:
+            raw = [c for c in raw if c["t"] >= asset["start"]]
 
         candles, removed = clean_candles(raw)
         if asset["market"] == "forex":

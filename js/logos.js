@@ -15,7 +15,7 @@ const LOGOS = {
   ETHUSDT: { symbol: "Ξ", background: "#627eea", color: "#fff" },
   SOLUSDT: { symbol: "◎", background: "linear-gradient(135deg, #9945ff, #14f195)", color: "#fff" },
 
-  // Bolsa: índices
+  // Índices bursátiles
   SPX: { symbol: "S&P", background: "#0b2f6b", color: "#fff" },
   NDX: { symbol: "NDX", background: "#0996c7", color: "#fff" },
   STOXX50: { symbol: "€50", background: "#003399", color: "#ffcc00" },
@@ -23,9 +23,23 @@ const LOGOS = {
   IBEX: { symbol: "35", background: "linear-gradient(#aa151b 0 25%, #f1bf00 25% 75%, #aa151b 75%)", color: "#aa151b" },
   N225: { symbol: "225", background: "#bc002d", color: "#fff" },
 
-  // Bolsa: acciones
+  // Acciones de empresas (emblemas propios, no sus logotipos)
   AAPL: { symbol: "🍎", background: "#1d1d1f", color: "#fff" },
+  MSFT: { symbol: "MS", background: "linear-gradient(135deg, #f25022 0 25%, #7fba00 25% 50%, #00a4ef 50% 75%, #ffb900 75%)", color: "#fff" },
+  NVDA: { symbol: "NV", background: "#76b900", color: "#000" },
+  AMZN: { symbol: "📦", background: "#ff9900", color: "#000" },
+  GOOGL: { symbol: "G", background: "linear-gradient(135deg, #4285f4, #34a853, #fbbc05, #ea4335)", color: "#fff" },
+  META: { symbol: "∞", background: "#0866ff", color: "#fff" },
+  TSLA: { symbol: "⚡", background: "#cc0000", color: "#fff" },
+  NFLX: { symbol: "N", background: "#000", color: "#e50914" },
+  JPM: { symbol: "JPM", background: "#117aca", color: "#fff" },
+  KO: { symbol: "🥤", background: "#f40009", color: "#fff" },
   SAN: { symbol: "SAN", background: "#ec0000", color: "#fff" },
+  ITX: { symbol: "👕", background: "#1a1a1a", color: "#fff" },
+  ASML: { symbol: "AS", background: "#0f238c", color: "#fff" },
+  LVMH: { symbol: "LV", background: "#3b2f20", color: "#e0c58f" },
+  TSM: { symbol: "💾", background: "#c8102e", color: "#fff" },
+  TM: { symbol: "🚗", background: "#eb0a1e", color: "#fff" },
 
   // FOREX: los símbolos de las dos monedas del par
   EURUSD: { symbol: "€$", background: "#1f4e9c", color: "#fff" },

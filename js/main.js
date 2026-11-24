@@ -42,7 +42,16 @@ const BIG_MOVE_PCT = 10;
 const TIE_THRESHOLD_PCT = 0.1;
 
 // Nombres de los mercados para mostrarlos al usuario
-const MARKET_NAMES = { bolsa: "Bolsa", forex: "FOREX", crypto: "Crypto", materias: "Materias primas" };
+const MARKET_NAMES = {
+  indices: "Índices bursátiles",
+  acciones: "Acciones de empresas",
+  forex: "FOREX",
+  crypto: "Crypto",
+  materias: "Materias primas",
+};
+// Antes, índices y acciones iban juntos en "bolsa". Las rondas jugadas
+// entonces siguen guardadas con esa clave y se muestran en su propia fila.
+const OLD_MARKET_NAMES = { bolsa: "Bolsa (rondas antiguas)" };
 
 // Elementos de la página que vamos a usar
 const message = document.getElementById("message");
@@ -443,7 +452,14 @@ function breakdownRows() {
 
   if (breakdownGroup === "byMarket") {
     // Todos los mercados, aunque aún no se hayan jugado
-    return Object.keys(MARKET_NAMES).map((market) => [MARKET_NAMES[market], entry(market)]);
+    const rows = Object.keys(MARKET_NAMES).map((market) => [MARKET_NAMES[market], entry(market)]);
+    // Mercados antiguos: solo si se jugó alguna ronda con ellos
+    for (const market of Object.keys(OLD_MARKET_NAMES)) {
+      if (group[market]) {
+        rows.push([OLD_MARKET_NAMES[market], group[market]]);
+      }
+    }
+    return rows;
   }
   if (breakdownGroup === "byHorizon") {
     const labels = { 10: "10 velas (corto plazo)", 50: "50 velas (largo plazo)" };
@@ -669,7 +685,7 @@ function selectOption(value, text) {
 
 // Rellena el desplegable con los activos de data/index.json, agrupados por
 // mercado (<optgroup>). En cada grupo, primero "cualquiera de ese mercado"
-// (valor "market:bolsa"...) y luego cada activo (valor "SPX"...).
+// (valor "market:acciones"...) y luego cada activo (valor "SPX"...).
 // También guarda los nombres para la tabla de estadísticas.
 async function fillAssetSelect() {
   const assets = await loadAssetList();

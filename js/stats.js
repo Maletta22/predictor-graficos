@@ -9,7 +9,7 @@ const STORAGE_KEY = "predictor-stats-v1";
 // Estadísticas vacías, para un jugador nuevo.
 // Los grupos (byMarket, byHorizon, byAsset) guardan { played, correct } por
 // cada mercado, plazo o activo, y se van creando a medida que se juega:
-//   byMarket:  { "bolsa": {...}, "crypto": {...} }
+//   byMarket:  { "acciones": {...}, "crypto": {...} }
 //   byHorizon: { "10": {...}, "20": {...} }    (velas reveladas)
 //   byAsset:   { "BTCUSDT": {...}, "GOLD": {...} }
 function emptyStats() {
