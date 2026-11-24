@@ -4,60 +4,61 @@
    chart.js también los lee, para que el gráfico vaya a juego.
    ========================================================================= */
 
-/* Estilo "periódico financiero": papel marfil, tinta azul marino, filetes
-   dorados y letra con remate (serif). En modo oscuro, tinta sobre noche. */
+/* Estilo suave y elegante: papel cálido, tinta gris azulada, detalles
+   dorados discretos y letra con remate (serif). En modo oscuro, tonos de
+   pizarra con acento dorado apagado. */
 :root {
   --font-serif: "Times New Roman", Times, "Liberation Serif", Georgia, serif;
-  --bg: #f4efe4;          /* fondo de la página: papel marfil */
-  --surface: #fffcf5;     /* fondo de las tarjetas */
-  --surface-alt: #f3ecdd; /* fondo de zonas secundarias */
-  --border: #dcd2bf;
-  --text: #1c2333;        /* tinta azul marino */
-  --muted: #6b6457;       /* texto secundario */
-  --grid: #efe8d8;        /* cuadrícula del gráfico */
-  --accent: #1f3a5f;      /* azul marino de botones y enlaces */
-  --accent-hover: #142a47;
+  --bg: #f6f3ec;          /* fondo de la página: papel marfil */
+  --surface: #fffdf9;     /* fondo de las tarjetas */
+  --surface-alt: #f4f0e7; /* fondo de zonas secundarias */
+  --border: #e6dfd1;
+  --text: #2f3542;        /* tinta azul marino */
+  --muted: #787264;       /* texto secundario */
+  --grid: #f1ece1;        /* cuadrícula del gráfico */
+  --accent: #4a6585;      /* azul marino de botones y enlaces */
+  --accent-hover: #3b5574;
   --on-accent: #fffcf5;   /* texto sobre el color de acento */
-  --gold: #a8823e;        /* filetes y detalles dorados */
-  --up: #2e7d5b;          /* verde: sube */
-  --up-hover: #23654a;
-  --down: #a8323e;        /* granate: baja */
-  --down-hover: #8b2732;
-  --up-soft: rgba(46, 125, 91, 0.35);   /* velas reveladas que suben */
-  --down-soft: rgba(168, 50, 62, 0.35); /* velas reveladas que bajan */
-  --info-bg: #f1eadb;     /* fondo de la frase de la moneda */
-  --tape-bg: #1c2333;     /* cinta de activos de arriba */
-  --tape-text: #e9e1cf;
-  --shadow: 0 1px 2px rgba(60, 45, 20, 0.05), 0 10px 28px -16px rgba(60, 45, 20, 0.25);
-  --backdrop-opacity: 0.07; /* intensidad del fondo decorativo */
+  --gold: #c2a56f;        /* filetes y detalles dorados */
+  --up: #4f9478;          /* verde: sube */
+  --up-hover: #418066;
+  --down: #bf6670;        /* granate: baja */
+  --down-hover: #a9545e;
+  --up-soft: rgba(79, 148, 120, 0.35);   /* velas reveladas que suben */
+  --down-soft: rgba(191, 102, 112, 0.35); /* velas reveladas que bajan */
+  --info-bg: #f3efe6;     /* fondo de la frase de la moneda */
+  --tape-bg: #f1ece2;     /* cinta de activos de arriba */
+  --tape-text: #787264;
+  --shadow: 0 1px 2px rgba(60, 45, 20, 0.04), 0 8px 24px -14px rgba(60, 45, 20, 0.14);
+  --backdrop-opacity: 0.045; /* intensidad del fondo decorativo */
   color-scheme: light;
 }
 
 /* Modo oscuro: si el sistema del usuario usa tema oscuro, cambiamos los colores */
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #0e131b;
-    --surface: #151b26;
-    --surface-alt: #1b2230;
-    --border: #2c3445;
-    --text: #ece4d3;
-    --muted: #a39a88;
-    --grid: #1e2633;
-    --accent: #c9a86a;      /* en oscuro, el acento es dorado */
-    --accent-hover: #dcbf85;
+    --bg: #151a22;
+    --surface: #1b212b;
+    --surface-alt: #212834;
+    --border: #303846;
+    --text: #e4dfd4;
+    --muted: #a59e90;
+    --grid: #232a36;
+    --accent: #c4ab7c;      /* en oscuro, el acento es dorado */
+    --accent-hover: #d3bc92;
     --on-accent: #11161f;
-    --gold: #c9a86a;
-    --up: #4fae86;
-    --up-hover: #63c299;
-    --down: #d9606b;
-    --down-hover: #e57a84;
-    --up-soft: rgba(79, 174, 134, 0.4);
-    --down-soft: rgba(217, 96, 107, 0.4);
-    --info-bg: #1c2433;
-    --tape-bg: #090c12;
-    --tape-text: #bfb6a3;
+    --gold: #a89068;
+    --up: #5fae8c;
+    --up-hover: #72bf9e;
+    --down: #d27880;
+    --down-hover: #de8c94;
+    --up-soft: rgba(95, 174, 140, 0.4);
+    --down-soft: rgba(210, 120, 128, 0.4);
+    --info-bg: #212938;
+    --tape-bg: #181e27;
+    --tape-text: #a59e90;
     --shadow: 0 10px 28px -16px rgba(0, 0, 0, 0.6);
-    --backdrop-opacity: 0.08;
+    --backdrop-opacity: 0.06;
     color-scheme: dark;
   }
 }
@@ -70,10 +71,16 @@
   box-sizing: border-box; /* el ancho incluye el relleno y el borde */
 }
 
+/* Tamaño base de la letra: 1rem = 17 px (la Times se ve pequeña a 16 px).
+   Todos los tamaños en "rem" de este archivo crecen con él. */
+html {
+  font-size: 17px;
+}
+
 body {
   margin: 0;
   font-family: var(--font-serif);
-  font-size: 17px; /* la letra Times se ve pequeña: un punto más que lo normal */
+  font-size: 1rem;
   line-height: 1.55;
   /* Papel: un tono liso con una luz suave arriba */
   background:
@@ -86,9 +93,7 @@ body {
 
 /* Títulos de sección en versalitas, como las cabeceras de un periódico */
 h2 {
-  font-weight: 600;
-  font-variant: small-caps;
-  letter-spacing: 0.05em;
+  font-weight: 500;
 }
 
 main {
@@ -170,7 +175,7 @@ kbd {
 .top {
   margin-bottom: 18px;
   padding-bottom: 10px;
-  border-bottom: 3px double var(--text); /* doble línea bajo la cabecera */
+  border-bottom: 1px solid var(--border); /* línea fina bajo la cabecera */
   text-align: center;
 }
 
@@ -191,7 +196,7 @@ kbd {
 .brand {
   margin: 0;
   font-size: 3rem;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.01em;
   line-height: 1.1;
 }
@@ -250,11 +255,9 @@ button.icon-button:hover {
 
 .ticker {
   overflow: hidden;
-  border-bottom: 2px solid var(--gold);
+  border-bottom: 1px solid var(--border);
   background: var(--tape-bg);
-  font-size: 0.8rem;
-  font-variant: small-caps;
-  letter-spacing: 0.04em;
+  font-size: 0.9rem;
   color: var(--tape-text);
   white-space: nowrap;
 }
@@ -322,6 +325,7 @@ button.icon-button:hover {
 
 .subtitle {
   margin: 6px 0 0;
+  font-size: 1.15rem;
   color: var(--muted);
   font-style: italic;
 }
@@ -331,9 +335,7 @@ button.icon-button:hover {
   margin: 8px 0 0;
   padding-top: 6px;
   border-top: 1px solid var(--border);
-  font-size: 0.8rem;
-  font-variant: small-caps;
-  letter-spacing: 0.08em;
+  font-size: 0.9rem;
   color: var(--muted);
 }
 
@@ -373,9 +375,7 @@ button.icon-button:hover {
 }
 
 .setting-label {
-  font-size: 0.85rem;
-  font-variant: small-caps;
-  letter-spacing: 0.06em;
+  font-size: 0.95rem;
   color: var(--muted);
 }
 
@@ -383,7 +383,7 @@ button.icon-button:hover {
 .segmented {
   display: inline-flex;
   border: 1px solid var(--border);
-  border-radius: 3px;
+  border-radius: 6px;
   overflow: hidden;
   background: var(--surface);
 }
@@ -394,7 +394,7 @@ button.icon-button:hover {
   background: none;
   color: var(--text);
   font-weight: 500;
-  font-size: 0.9rem;
+  font-size: 1rem;
 }
 
 .segmented button + button {
@@ -412,16 +412,16 @@ button.icon-button:hover {
 
 select {
   font: inherit;
-  font-size: 0.9rem;
+  font-size: 1rem;
   padding: 6px 10px;
   border: 1px solid var(--border);
-  border-radius: 3px;
+  border-radius: 6px;
   background: var(--surface);
   color: var(--text);
 }
 
 .settings-note {
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   font-style: italic;
   color: var(--accent);
 }
@@ -434,7 +434,7 @@ select {
 .asset-picker {
   margin-bottom: 12px;
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: 10px;
   background: var(--surface);
 }
 
@@ -463,7 +463,7 @@ select {
 
 /* "Elegir ▾" cuando está plegado, "Cerrar ▴" cuando está abierto */
 .asset-toggle-hint {
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   color: var(--accent);
 }
 
@@ -477,7 +477,7 @@ select {
 
 .asset-picker[open] .asset-toggle-hint::after {
   content: "Cerrar ▴";
-  font-size: 0.85rem;
+  font-size: 0.95rem;
 }
 
 .asset-picker-body {
@@ -494,7 +494,7 @@ select {
 }
 
 .asset-picker-help {
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   font-style: italic;
   color: var(--muted);
 }
@@ -525,7 +525,7 @@ button.chip {
   border-radius: 999px;
   background: var(--surface);
   color: var(--text);
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   font-weight: normal;
   line-height: 1.5;
 }
@@ -536,18 +536,17 @@ button.chip:hover {
 
 button.chip.active {
   border-color: var(--accent);
-  background: var(--accent);
-  color: var(--on-accent);
+  background: var(--info-bg);
+  color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent); /* borde algo más marcado */
 }
 
 /* Mercados y "Todos": rectangulares, en versalitas */
 button.chip.market,
 button.chip.all {
   justify-self: start;
-  padding: 2px 10px;
-  border-radius: 3px;
-  font-variant: small-caps;
-  letter-spacing: 0.04em;
+  padding: 2px 12px;
+  border-radius: 999px;
   font-weight: 600;
 }
 
@@ -573,8 +572,8 @@ button.chip .logo-small {
 .settings-warning {
   margin: -4px 0 12px;
   padding: 8px 12px;
-  border-radius: 3px;
-  font-size: 0.85rem;
+  border-radius: 6px;
+  font-size: 0.95rem;
   background: var(--info-bg);
 }
 
@@ -594,7 +593,7 @@ button.chip .logo-small {
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: 10px;
   box-shadow: var(--shadow);
 }
 
@@ -631,7 +630,7 @@ button.chip .logo-small {
 
 .hint {
   margin: 12px 0 0;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   color: var(--muted);
   text-align: center;
 }
@@ -650,7 +649,7 @@ button {
   font-weight: 600;
   padding: 12px 20px;
   border: none;
-  border-radius: 3px;
+  border-radius: 6px;
   color: #fff;
   cursor: pointer;
   transition: background-color 0.15s;
@@ -671,8 +670,6 @@ button.primary {
   width: 100%;
   background: var(--accent);
   color: var(--on-accent);
-  font-variant: small-caps;
-  letter-spacing: 0.06em;
 }
 
 button.primary:hover {
@@ -703,8 +700,6 @@ button.down:hover:enabled {
 .buttons button {
   flex: 1; /* los dos botones del mismo ancho */
   font-size: 1.2rem;
-  font-variant: small-caps;
-  letter-spacing: 0.06em;
 }
 
 /* Botón con aspecto de enlace (para acciones secundarias) */
@@ -713,7 +708,7 @@ button.link {
   background: none;
   color: var(--muted);
   font-weight: normal;
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   text-decoration: underline;
 }
 
@@ -777,7 +772,7 @@ button.link:hover {
   border: 1px solid var(--gold);
   border-radius: 999px; /* forma de píldora */
   background: var(--info-bg);
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   font-style: italic;
   animation: pop 0.35s ease-out both;
 }
@@ -874,9 +869,7 @@ dl {
 }
 
 dt {
-  font-size: 0.85rem;
-  font-variant: small-caps;
-  letter-spacing: 0.06em;
+  font-size: 0.95rem;
   color: var(--muted);
 }
 
@@ -896,7 +889,7 @@ dd {
 
 .context h2 {
   margin: 0 0 12px;
-  font-size: 1.3rem;
+  font-size: 1.45rem;
 }
 
 .context-fed {
@@ -915,7 +908,7 @@ dd {
 }
 
 .event-date {
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   font-style: italic;
   color: var(--muted);
   font-variant-numeric: tabular-nums;
@@ -926,7 +919,7 @@ dd {
   margin-left: 6px;
   padding: 1px 6px;
   border-radius: 4px;
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   font-weight: 600;
   background: var(--info-bg);
   color: var(--accent);
@@ -940,7 +933,7 @@ dd {
 .event-text {
   margin: 2px 0 0;
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: 1rem;
 }
 
 .no-events {
@@ -953,7 +946,7 @@ dd {
 
 .context-note {
   margin: 12px 0 0;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   color: var(--muted);
 }
 
@@ -967,7 +960,7 @@ dd {
 
 .stats h2 {
   margin: 0 0 12px;
-  font-size: 1.3rem;
+  font-size: 1.45rem;
 }
 
 .stats-grid {
@@ -981,9 +974,7 @@ dd {
   border-left: 2px solid var(--gold);
   background: var(--surface-alt);
   color: var(--muted);
-  font-size: 0.85rem;
-  font-variant: small-caps;
-  letter-spacing: 0.04em;
+  font-size: 0.95rem;
 }
 
 .stat-value {
@@ -1016,8 +1007,6 @@ dd {
   margin: 0;
   font-size: 1rem;
   font-weight: 600;
-  font-variant: small-caps;
-  letter-spacing: 0.05em;
 }
 
 /* En móvil, la tabla puede desplazarse en horizontal sin romper la página */
@@ -1027,7 +1016,7 @@ dd {
 
 .table-note {
   margin: 8px 0 0;
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   color: var(--muted);
 }
 
@@ -1050,12 +1039,10 @@ td {
 }
 
 th {
-  font-size: 0.85rem;
-  font-variant: small-caps;
-  letter-spacing: 0.06em;
+  font-size: 0.95rem;
   color: var(--muted);
   font-weight: 600;
-  border-bottom: 1px solid var(--text); /* filete de tinta bajo la cabecera */
+  border-bottom: 1px solid var(--gold); /* filete dorado bajo la cabecera */
 }
 
 .stats-footer {
@@ -1064,7 +1051,7 @@ th {
   align-items: center;
   margin: 12px 0 0;
   color: var(--muted);
-  font-size: 0.85rem;
+  font-size: 0.95rem;
 }
 
 /* =========================================================================
@@ -1090,7 +1077,7 @@ th {
   margin: 0;
   padding: 0;
   border: none;
-  font-size: 1.3rem;
+  font-size: 1.45rem;
 }
 
 .join-form {
@@ -1104,7 +1091,7 @@ th {
   font: inherit;
   padding: 8px 12px;
   border: 1px solid var(--border);
-  border-radius: 3px;
+  border-radius: 6px;
   background: var(--surface);
   color: var(--text);
 }
@@ -1145,9 +1132,9 @@ td.position {
 .footer {
   margin-top: 32px;
   padding-top: 12px;
-  border-top: 3px double var(--border);
+  border-top: 1px solid var(--border);
   color: var(--muted);
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   font-style: italic;
   text-align: center;
 }
@@ -1191,7 +1178,7 @@ td.position {
   }
 
   .stat-value {
-    font-size: 1.3rem;
+    font-size: 1.45rem;
   }
 }
 

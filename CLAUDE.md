@@ -99,10 +99,12 @@ consistente es muy difícil y comparar su resultado con el azar (50 %).
 - Más recursos: logotipo "Up▲Down▼"; las velas reveladas aparecen una a una
   (1,2 s en total); confeti al batir la mejor racha (desde 3); cinta de
   activos arriba; sonidos al acertar/fallar con botón 🔊/🔇 (se guarda).
-- Estilo visual "periódico financiero": letra Times New Roman (sin fuentes
-  externas), papel marfil y tinta azul marino, filetes dorados, títulos en
-  versalitas, cabecera centrada con doble línea; en modo oscuro, fondo noche
-  con acento dorado (`--on-accent` es el color del texto sobre el acento).
+- Estilo visual suave y elegante: letra Times New Roman (sin fuentes
+  externas) con tamaño base de 17 px (`html { font-size: 17px }`), papel
+  cálido y tinta gris azulada, colores apagados, detalles dorados discretos,
+  esquinas redondeadas, cabecera centrada con una línea fina. Sin versalitas
+  (el usuario las vio "agresivas" y pequeñas). En modo oscuro, tonos de
+  pizarra con acento dorado apagado (`--on-accent` = texto sobre el acento).
   El fondo decorativo son velas en tinta (huecas las que suben).
 - La ronda se guarda al responder, pero resultado, estadísticas, insignias,
   sonido y confeti se muestran **al terminar la animación** (si no, las
