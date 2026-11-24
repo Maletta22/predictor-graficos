@@ -132,9 +132,10 @@ export function isAssetAvailable(info, range, totalCandles) {
 
 // Probabilidad de que salga cada mercado (en %). Sin esto, cada ACTIVO
 // tendría la misma probabilidad y saldrían sobre todo acciones (hay 16).
-// Si solo entran algunos mercados (por la selección o las fechas), se
-// reparten entre ellos en la misma proporción: p. ej. solo Crypto y
-// Materias primas → 22,5 / (22,5 + 10) ≈ 69 % y 31 %.
+// Solo se usan en el modo "Todos". Si el filtro de fechas deja fuera algún
+// mercado, los que quedan se reparten en la misma proporción.
+// En una selección personal, todos los mercados elegidos valen lo mismo
+// (2 mercados → 50 % y 50 %; 3 → 33 % cada uno...).
 export const MARKET_WEIGHTS = {
   indices: 22.5,
   acciones: 22.5,
@@ -144,11 +145,13 @@ export const MARKET_WEIGHTS = {
 };
 const DEFAULT_WEIGHT = 22.5; // para un mercado nuevo que no esté en la lista
 
-// Elige un activo de "list": primero un mercado según su peso y después,
-// dentro de ese mercado, un activo cualquiera (todos con la misma probabilidad).
-export function pickWeightedAsset(list) {
+// Elige un activo de "list": primero un mercado y después, dentro de ese
+// mercado, un activo cualquiera (todos con la misma probabilidad).
+//   useWeights: true  → cada mercado según MARKET_WEIGHTS (modo "Todos")
+//               false → todos los mercados con la misma probabilidad
+export function pickWeightedAsset(list, useWeights = true) {
   const markets = [...new Set(list.map((a) => a.market))]; // mercados presentes, sin repetir
-  const weightOf = (market) => MARKET_WEIGHTS[market] ?? DEFAULT_WEIGHT;
+  const weightOf = (market) => (useWeights ? MARKET_WEIGHTS[market] ?? DEFAULT_WEIGHT : 1);
   const total = markets.reduce((sum, market) => sum + weightOf(market), 0);
 
   // "Ruleta": un número al azar entre 0 y el total; cada mercado ocupa un
@@ -189,9 +192,9 @@ export async function pickRandomRound(revealCount, tickers = [], range = rangeFr
   }
 
   for (let attempt = 0; attempt < MAX_TRIES; attempt++) {
-    // 1. Un activo al azar: primero el mercado (según MARKET_WEIGHTS) y
-    //    luego un activo de ese mercado
-    const info = pickWeightedAsset(list);
+    // 1. Un activo al azar: primero el mercado y luego un activo de ese
+    //    mercado. Pesos de MARKET_WEIGHTS solo en el modo "Todos" (tickers = [])
+    const info = pickWeightedAsset(list, tickers.length === 0);
     const asset = await loadAsset(info.file);
 
     // 2. Las velas que caen dentro del rango de fechas

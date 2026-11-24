@@ -57,8 +57,10 @@ consistente es muy difícil y comparar su resultado con el azar (50 %).
 - Probabilidad de cada mercado al sortear (`MARKET_WEIGHTS` en `data.js`):
   índices, acciones, FOREX y crypto 22,5 % cada uno; materias primas 10 %.
   Primero se sortea el mercado y luego un activo de ese mercado (todos con la
-  misma probabilidad). Si solo entran algunos mercados (selección o fechas),
-  los pesos se reparten entre ellos en la misma proporción.
+  misma probabilidad). Los pesos solo se usan en el modo «Todos» (si las
+  fechas dejan fuera algún mercado, se reparten en la misma proporción). En
+  una **selección personal**, los mercados elegidos valen lo mismo (2 → 50/50,
+  3 → 33/33/33...), aunque de un mercado solo se elija un activo.
 - Selector de activos (`<details>` plegable): plegado, una línea con el
   resumen («Apple y Crypto»); desplegado, una fila por mercado con un botón
   para el mercado entero y una pastilla por activo. Se guarda en
