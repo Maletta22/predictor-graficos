@@ -35,7 +35,7 @@ consistente es muy difícil y comparar su resultado con el azar (50 %).
 | Fechas | sin límite | Rango por años (Desde / Hasta); las 60 + N velas deben caer dentro |
 | Criterio "sube" | cierre de la última vela revelada > cierre de la última vela visible | |
 | Empate | variación absoluta < 0,1 % → la ronda no cuenta | Evita castigar por ruido |
-| Temporalidad | diaria | Más adelante: 1h, 4h, semanal |
+| Temporalidad | diaria | El usuario elige **diaria o semanal**. La semanal se calcula en la web a partir de las diarias (`toWeekly`: lunes a domingo). Pendiente: 4 h |
 
 - **Días con el mercado cerrado**: los cierres *normales* (fines de semana,
   festivos) NO se muestran; las velas van seguidas, como en cualquier gráfico.
@@ -50,6 +50,14 @@ consistente es muy difícil y comparar su resultado con el azar (50 %).
 - Fragmentos con un salto de más de 7 días naturales entre dos velas se
   descartan: son agujeros en los datos, no cierres reales (el cierre tras el
   11-S, de 7 días, sí se mantiene).
+- Vista semanal: las etiquetas del eje dicen «Semana N» y los textos
+  «semanas» en vez de «velas»; sin huecos de cierres excepcionales (la vela
+  de esa semana ya recoge el salto); agujero en los datos = más de 14 días
+  entre velas; para estimar si hay datos, 7 días por vela.
+- Primera visita: visita guiada de 3 pasos (`js/tour.js`) en una tarjeta
+  sobre el gráfico (fija abajo en móvil), que resalta la zona de la que
+  habla. Se recuerda con `updown-tour-done` en `localStorage`; el botón
+  «¿Cómo se juega?» de la cabecera la vuelve a abrir.
 - Los ajustes (velas reveladas, activo y fechas) se guardan en `localStorage`
   y se aplican **en el siguiente gráfico**, nunca en el actual: así no sirven
   para saltarse un gráfico difícil. Excepción: si los filtros estaban
@@ -88,12 +96,12 @@ consistente es muy difícil y comparar su resultado con el azar (50 %).
 
 - Rondas jugadas, aciertos, % de acierto, racha actual y mejor racha.
 - Totales comunes (aciertos y fallos de todas las rondas) y, debajo, una tabla
-  de **detalle** con pestañas: por **mercado** (índices / acciones / FOREX /
+  de **detalle** con pestañas: por **temporalidad** (diaria / semanal), por **mercado** (índices / acciones / FOREX /
   crypto / materias primas; las rondas guardadas con el antiguo mercado
   `bolsa` salen en una fila «Bolsa (rondas antiguas)»), por **plazo** (10 / 20 / 30 / 50 velas reveladas) o por
   **activo**. Cada fila incluye su propia comparación con la moneda y un aviso
   de que con menos de ~30 rondas por grupo no hay que sacar conclusiones.
-- Formato guardado: `byMarket`, `byHorizon` y `byAsset`, cada uno
+- Formato guardado: `byMarket`, `byHorizon`, `byTimeframe` y `byAsset`, cada uno
   `{ clave: { played, correct } }`; las entradas se crean al jugar.
 - **Comparación con el azar**: probabilidad de obtener ese número de aciertos
   o más lanzando una moneda (test binomial unilateral, p = 0,5). Mostrarlo en
@@ -140,6 +148,7 @@ consistente es muy difícil y comparar su resultado con el azar (50 %).
 │   ├── confetti.js     # confeti al batir la mejor racha
 │   ├── sounds.js       # sonidos sintetizados (Web Audio, sin archivos)
 │   ├── context.js      # contexto tras revelar: FED, BCE, eventos, enlace a noticias
+│   ├── tour.js         # visita guiada de 3 pasos (primera visita)
 │   ├── online.js       # cuentas por apodo y ranking (Supabase)
 │   └── config.js       # URL y clave pública de Supabase (vacías = sin ranking)
 ├── data/
@@ -158,11 +167,15 @@ consistente es muy difícil y comparar su resultado con el azar (50 %).
   cargada desde CDN con versión fija.
 - **Datos**: se descargan **una vez** con `scripts/download_data.py` y se guardan
   en `data/`. La web nunca llama a APIs externas en v1.
-- **Formato de cada archivo de datos**:
+- **Formato de cada archivo de datos** (compacto: cada vela es una lista
+  `[fecha, o, h, l, c]`, con los precios redondeados a 6 cifras
+  significativas; pesa casi la mitad que con objetos). `data.js`
+  (`unpackCandle`) lo convierte al cargar en `{ t, o, h, l, c }`, que es lo
+  que usa el resto del código:
   ```json
   { "ticker": "BTCUSDT", "name": "Bitcoin / USD", "market": "crypto",
-    "interval": "1d",
-    "candles": [ { "t": "2021-03-01", "o": 45000, "h": 49800, "l": 44900, "c": 49600 } ] }
+    "interval": "1d", "columns": ["t", "o", "h", "l", "c"],
+    "candles": [ ["2021-03-01", 45000, 49800, 44900, 49600] ] }
   ```
 - **Hosting**: GitHub Pages (gratis). Se publica desde la rama `main`, carpeta
   raíz, sin Jekyll (`.nojekyll`). Web: https://maletta22.github.io/predictor-graficos/
@@ -179,10 +192,11 @@ consistente es muy difícil y comparar su resultado con el azar (50 %).
 | Tipos de la FED | FRED (serie `FEDFUNDS`, pública, sin cuenta) | Python + `requests` |
 | Tipos del BCE | FRED (serie `ECBDFR`, facilidad de depósito, desde 1999) | Python + `requests` |
 
-Activos incluidos (34), en la lista `ASSETS` de `download_data.py`:
+Activos incluidos (39), en la lista `ASSETS` de `download_data.py`:
 - **Crypto**: Bitcoin, Ethereum, Solana.
 - **Índices bursátiles** (`market: "indices"`): S&P 500, Nasdaq 100, Euro Stoxx 50,
-  DAX, IBEX 35, Nikkei 225.
+  DAX, IBEX 35, Nikkei 225 y emergentes: Bovespa (Brasil), IPC (México),
+  Nifty 50 (India), KOSPI (Corea del Sur), Shanghái Compuesto (China).
 - **Acciones de empresas** (`market: "acciones"`): Apple, Microsoft, NVIDIA,
   Amazon, Alphabet, Meta, Tesla, Netflix, JPMorgan, Coca-Cola, Santander,
   Inditex, ASML, LVMH, TSMC (ADR en EE. UU.), Toyota.
@@ -222,8 +236,10 @@ pública con fines comerciales, revisar licencias.
 - [x] **Fase 4** – Estadísticas, rachas y comparación con el azar.
 - [x] **Fase 5** – Diseño cuidado, móvil, publicar en GitHub Pages.
 - [ ] **Fase 6+** – Ideas futuras (no empezar sin pedirlo):
-  - Elegir mercado y temporalidad. (Hecho: elegir un activo concreto y las
-    velas reveladas. Pendiente: temporalidad 1h/4h/semanal.)
+  - Elegir mercado y temporalidad. (Hecho: activos, velas reveladas y
+    temporalidad diaria/semanal. Pendiente: 4 h, que necesita datos por horas:
+    Binance los tiene para crypto, pero Yahoo solo da ~2 años de datos
+    horarios para el resto.)
   - Modo "cuánto sube": el usuario estima el % de variación.
   - Indicadores opcionales (medias móviles, RSI) para ver si ayudan.
   - [x] **Cuentas y ranking (Supabase)**. Activo y probado por el usuario en
@@ -246,7 +262,7 @@ pública con fines comerciales, revisar licencias.
       `config.js` está relleno.
   - [x] Tipos del BCE en el contexto de los activos europeos o con euro
     (EUR/USD, EUR/GBP, Euro Stoxx 50, DAX, IBEX 35, Santander, Inditex, ASML, LVMH).
-  - Más activos: bolsas emergentes (pendiente; el resto de la ampliación está hecha).
+  - [x] Más activos: bolsas emergentes (Brasil, México, India, Corea, China).
   - **Noticias del periodo tras responder** (objetivo: pasar de "juego" a
     herramienta educativa). Solo se muestra *después* de responder, porque antes
     delataría el activo. Se hace por fases:

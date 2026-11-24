@@ -37,25 +37,22 @@
       <p class="dateline">Juego educativo · Datos reales de bolsa, divisas, crypto y materias primas</p>
     </header>
 
-    <details class="howto">
-      <summary>Cómo se juega</summary>
-      <ol>
-        <li>Ves 60 velas diarias de un activo real (bolsa, FOREX o crypto) de un periodo al azar.</li>
-        <li>Los precios están convertidos para que la última vela valga 100: así no se reconoce el activo.</li>
-        <li>Decides si, unas velas después, el precio estará más arriba o más abajo (20 velas por defecto; puedes elegir 10, 30 o 50).</li>
-        <li>Se revela la continuación, el activo, las fechas y los precios reales.</li>
-        <li>Si la variación es menor del 0,1 %, es empate y la ronda no cuenta.</li>
-      </ol>
-      <p>
-        Los fines de semana y festivos no aparecen en el gráfico. Los cierres
-        excepcionales del mercado (como tras el 11-S) se ven como huecos.
-      </p>
-    </details>
+    <!-- Vuelve a abrir la visita guiada (js/tour.js), que sale sola la primera vez -->
+    <p class="howto">
+      <button id="tour-open" class="link-accent" type="button">¿Cómo se juega?</button>
+    </p>
 
     <!-- Ajustes de la partida (se aplican en el siguiente gráfico) -->
     <div class="settings">
       <div class="setting">
-        <span class="setting-label">Velas a revelar</span>
+        <span class="setting-label">Velas</span>
+        <div id="timeframe-options" class="segmented">
+          <button data-value="1d" title="Cada vela es un día">Diarias</button>
+          <button data-value="1w" title="Cada vela es una semana: se ven tendencias más largas">Semanales</button>
+        </div>
+      </div>
+      <div class="setting">
+        <span class="setting-label">A revelar</span>
         <div id="reveal-options" class="segmented">
           <button data-value="10" title="Corto plazo">10</button>
           <button data-value="20">20</button>
@@ -102,8 +99,21 @@
     <!-- Zona de juego: gráfico a la izquierda, panel lateral a la derecha
          (en pantallas estrechas, el panel pasa debajo del gráfico) -->
     <div class="game">
-      <!-- Aquí dibuja chart.js el gráfico -->
-      <div id="chart" class="card"></div>
+      <div class="chart-wrap">
+        <!-- Aquí dibuja chart.js el gráfico -->
+        <div id="chart" class="card"></div>
+
+        <!-- Visita guiada: tarjeta encima del gráfico (la maneja js/tour.js) -->
+        <div id="tour" class="tour hidden" role="dialog" aria-labelledby="tour-title">
+          <p id="tour-counter" class="tour-counter"></p>
+          <h2 id="tour-title" class="tour-title"></h2>
+          <p id="tour-text" class="tour-text"></p>
+          <div class="tour-buttons">
+            <button id="tour-skip" class="link" type="button">Saltar</button>
+            <button id="tour-next" class="primary-inline" type="button"></button>
+          </div>
+        </div>
+      </div>
 
       <aside class="side">
         <!-- Paso 1: el usuario decide -->
@@ -175,6 +185,7 @@
         <div id="breakdown-tabs" class="segmented">
           <button data-group="byMarket">Mercado</button>
           <button data-group="byHorizon">Plazo</button>
+          <button data-group="byTimeframe">Temporalidad</button>
           <button data-group="byAsset">Activo</button>
         </div>
       </div>

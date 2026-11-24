@@ -7,9 +7,9 @@
 
 import {
   pickRandomRound, loadAssetList, rangeFromYears, assetsForChoice, isAssetAvailable,
-  VISIBLE_CANDLES,
+  VISIBLE_CANDLES, TIMEFRAMES,
 } from "./data.js";
-import { createCandleChart, drawCandles, revealCandles } from "./chart.js";
+import { createCandleChart, drawCandles, revealCandles, setTimeframe } from "./chart.js";
 import { loadStats, recordResult, resetStats, coinProbabilityAtLeast } from "./stats.js";
 import {
   loadContext, describeRates, isEcbRelevant, eventsInRange, newsSearchUrl, searchName,
@@ -20,6 +20,7 @@ import { drawBackdrop } from "./backdrop.js";
 import { launchConfetti } from "./confetti.js";
 import { playSound, setSoundEnabled } from "./sounds.js";
 import { fillTicker } from "./ticker.js";
+import { initTour } from "./tour.js";
 import {
   isOnlineConfigured, initOnline, currentPlayer, nicknameError, joinRanking,
   syncStats, fetchRanking, fetchMyPosition, RANKING_MIN_ROUNDS,
@@ -72,6 +73,7 @@ const nextButton = document.getElementById("next-round");
 
 // Elementos de los ajustes
 const revealOptions = document.getElementById("reveal-options");
+const timeframeOptions = document.getElementById("timeframe-options");
 const assetPicker = document.getElementById("asset-picker");
 const assetSummary = document.getElementById("asset-summary");
 const assetTable = document.getElementById("asset-table");
@@ -216,9 +218,12 @@ async function newRound() {
   }
 
   try {
-    currentRound = await pickRandomRound(settings.revealCount, settings.tickers, currentRange());
+    currentRound = await pickRandomRound(
+      settings.revealCount, settings.tickers, currentRange(), settings.timeframe);
+    const unit = TIMEFRAMES[currentRound.timeframe].unit; // "velas" o "semanas"
     question.textContent =
-      `¿Qué hará el precio en las próximas ${currentRound.hidden.length} velas?`;
+      `¿Qué hará el precio en las próximas ${currentRound.hidden.length} ${unit}?`;
+    setTimeframe(currentRound.timeframe); // etiquetas "Día" o "Semana" del eje
     drawCandles(currentRound.visible);
     upButton.disabled = false;
     downButton.disabled = false;
@@ -268,9 +273,10 @@ async function answer(guess) {
   resultBox.className = `card panel ${outcome}`; // franja de color arriba
 
   const revealed = round.hidden.length;
+  const unit = TIMEFRAMES[round.timeframe].unit; // "velas" o "semanas"
   const direction = changePct > 0 ? "subió" : "bajó";
   resultChange.textContent =
-    `En las ${revealed} velas siguientes el precio ${direction} un ${formatPct(Math.abs(changePct))}.` +
+    `En las ${revealed} ${unit} siguientes el precio ${direction} un ${formatPct(Math.abs(changePct))}.` +
     (outcome === "tie" ? ` (Menos de un ${TIE_THRESHOLD_PCT.toLocaleString("es-ES")} % se considera empate.)` : "");
 
   const firstDate = round.visible[0].t;
@@ -283,7 +289,7 @@ async function answer(guess) {
   resultAsset.appendChild(element("span", "", `${round.name} (${MARKET_NAMES[round.market]})`));
   resultDates.textContent = `Del ${formatDate(firstDate)} al ${formatDate(lastDate)}`;
   resultPriceStart.textContent = `${formatPrice(round.decisionPrice)} (${formatDate(decisionDate)})`;
-  resultPriceEndLabel.textContent = `Precio ${revealed} velas después`;
+  resultPriceEndLabel.textContent = `Precio ${revealed} ${unit} después`;
   resultPriceEnd.textContent = `${formatPrice(round.finalPrice)} (${formatDate(lastDate)})`;
 
   choiceBox.classList.add("hidden");
@@ -464,6 +470,9 @@ function breakdownRows() {
     }
     return rows;
   }
+  if (breakdownGroup === "byTimeframe") {
+    return Object.keys(TIMEFRAMES).map((tf) => [TIMEFRAMES[tf].name, entry(tf)]);
+  }
   if (breakdownGroup === "byHorizon") {
     const labels = { 10: "10 velas (corto plazo)", 50: "50 velas (largo plazo)" };
     return REVEAL_OPTIONS.map((n) => [labels[n] || `${n} velas`, entry(String(n))]);
@@ -490,7 +499,7 @@ function renderBreakdown() {
     button.classList.toggle("active", isActive);
     button.setAttribute("aria-pressed", isActive);
   }
-  breakdownColumn.textContent = { byMarket: "Mercado", byHorizon: "Plazo", byAsset: "Activo" }[breakdownGroup];
+  breakdownColumn.textContent = { byMarket: "Mercado", byHorizon: "Plazo", byTimeframe: "Temporalidad", byAsset: "Activo" }[breakdownGroup];
 
   statBreakdown.innerHTML = "";
   const rows = breakdownRows();
@@ -567,7 +576,8 @@ function filterProblem() {
   }
 
   const candidates = assetsForChoice(assetList, settings.tickers);
-  const available = candidates.filter((a) => isAssetAvailable(a, currentRange(), candlesNeeded()));
+  const available = candidates.filter((a) =>
+    isAssetAvailable(a, currentRange(), candlesNeeded(), settings.timeframe));
 
   if (available.length === 0 && candidates.length === 1) {
     const asset = candidates[0];
@@ -603,7 +613,7 @@ function filterProblem() {
 
 // ¿Tiene el activo datos suficientes en las fechas elegidas?
 function hasDataInRange(asset) {
-  return isAssetAvailable(asset, currentRange(), candlesNeeded());
+  return isAssetAvailable(asset, currentRange(), candlesNeeded(), settings.timeframe);
 }
 
 // Activos de un mercado
@@ -726,6 +736,11 @@ function renderSettings() {
     button.classList.toggle("active", isActive);
     button.setAttribute("aria-pressed", isActive);
   }
+  for (const button of timeframeOptions.querySelectorAll("button")) {
+    const isActive = button.dataset.value === settings.timeframe;
+    button.classList.toggle("active", isActive);
+    button.setAttribute("aria-pressed", isActive);
+  }
   fromYearSelect.value = settings.fromYear;
   toYearSelect.value = settings.toYear;
 
@@ -777,6 +792,13 @@ function fillYearSelects(assets) {
   for (let year = firstYear; year <= lastYear; year++) {
     fromYearSelect.appendChild(selectOption(String(year), `Desde ${year}`));
     toYearSelect.appendChild(selectOption(String(year), `Hasta ${year}`));
+  }
+}
+
+function onTimeframeClick(event) {
+  const button = event.target.closest("button");
+  if (button !== null) {
+    changeSetting("timeframe", button.dataset.value);
   }
 }
 
@@ -954,6 +976,10 @@ function onKeyDown(event) {
   if (event.target.tagName === "SELECT" || event.target.tagName === "INPUT") {
     return;
   }
+  // Con la visita guiada abierta, los atajos no se usan
+  if (!document.getElementById("tour").classList.contains("hidden")) {
+    return;
+  }
   const choosing = !choiceBox.classList.contains("hidden") && !upButton.disabled;
   const showingResult = !resultBox.classList.contains("hidden");
 
@@ -977,6 +1003,7 @@ downButton.addEventListener("click", () => answer("down"));
 nextButton.addEventListener("click", newRound);
 resetButton.addEventListener("click", onResetStats);
 revealOptions.addEventListener("click", onRevealOptionClick);
+timeframeOptions.addEventListener("click", onTimeframeClick);
 breakdownTabs.addEventListener("click", onBreakdownTabClick);
 soundToggle.addEventListener("click", onSoundToggle);
 joinForm.addEventListener("submit", onJoinSubmit);
@@ -995,6 +1022,7 @@ fillAssetPicker()
   .finally(newRound);
 
 startOnline(); // ranking online, si está configurado
+initTour(document.getElementById("tour-open")); // visita guiada (sale sola la primera vez)
 
 // Datos de contexto en segundo plano. Si fallan, el juego sigue sin la tarjeta.
 loadContext()

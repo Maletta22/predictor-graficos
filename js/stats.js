@@ -7,10 +7,11 @@
 const STORAGE_KEY = "predictor-stats-v1";
 
 // Estadísticas vacías, para un jugador nuevo.
-// Los grupos (byMarket, byHorizon, byAsset) guardan { played, correct } por
+// Los grupos (byMarket, byHorizon, byTimeframe, byAsset) guardan { played, correct } por
 // cada mercado, plazo o activo, y se van creando a medida que se juega:
 //   byMarket:  { "acciones": {...}, "crypto": {...} }
 //   byHorizon: { "10": {...}, "20": {...} }    (velas reveladas)
+//   byTimeframe: { "1d": {...}, "1w": {...} }   (diaria / semanal)
 //   byAsset:   { "BTCUSDT": {...}, "GOLD": {...} }
 function emptyStats() {
   return {
@@ -21,6 +22,7 @@ function emptyStats() {
     bestStreak: 0,    // mejor racha de aciertos seguidos
     byMarket: {},
     byHorizon: {},
+    byTimeframe: {},
     byAsset: {},
   };
 }
@@ -71,6 +73,7 @@ export function recordResult(stats, round, outcome) {
     stats.played++;
     addToGroup(stats.byMarket, round.market, isCorrect);
     addToGroup(stats.byHorizon, String(round.hidden.length), isCorrect);
+    addToGroup(stats.byTimeframe, round.timeframe, isCorrect);
     addToGroup(stats.byAsset, round.ticker, isCorrect);
     if (isCorrect) {
       stats.correct++;

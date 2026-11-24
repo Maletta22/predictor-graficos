@@ -61,6 +61,17 @@ ASSETS = [
      "source": "yahoo", "symbol": "^IBEX"},
     {"ticker": "N225", "name": "Nikkei 225 (Japón)", "market": "indices",
      "source": "yahoo", "symbol": "^N225"},
+    # Bolsas emergentes
+    {"ticker": "BVSP", "name": "Bovespa (Brasil)", "market": "indices",
+     "source": "yahoo", "symbol": "^BVSP"},
+    {"ticker": "MXX", "name": "IPC (México)", "market": "indices",
+     "source": "yahoo", "symbol": "^MXX"},
+    {"ticker": "NIFTY", "name": "Nifty 50 (India)", "market": "indices",
+     "source": "yahoo", "symbol": "^NSEI"},
+    {"ticker": "KOSPI", "name": "KOSPI (Corea del Sur)", "market": "indices",
+     "source": "yahoo", "symbol": "^KS11"},
+    {"ticker": "SSEC", "name": "Shanghái Compuesto (China)", "market": "indices",
+     "source": "yahoo", "symbol": "000001.SS"},
 
     # --- Acciones de empresas (Yahoo Finance) ---
     # Los precios de Yahoo ya vienen ajustados por "splits" (cuando una
@@ -261,6 +272,22 @@ def download_fred_series(series, file, name):
 # Limpieza de datos
 # ---------------------------------------------------------------------------
 
+# Cifras significativas que guardamos de cada precio. 6 bastan de sobra:
+# 45123,7 (Bitcoin) o 1,08345 (EUR/USD). Más cifras solo engordan el archivo.
+SIGNIFICANT_DIGITS = 6
+
+
+def round_significant(price):
+    """Redondea un precio a SIGNIFICANT_DIGITS cifras significativas.
+
+    45123.71234 → 45123.7    1.0834512 → 1.08345    0.000123456789 → 0.000123457
+    """
+    # El formato "g" de Python redondea a cifras significativas: f"{x:.6g}"
+    rounded = float(f"{price:.{SIGNIFICANT_DIGITS}g}")
+    # 45000.0 → 45000 (sin ".0", el archivo queda más corto)
+    return int(rounded) if rounded == int(rounded) else rounded
+
+
 def clean_candles(candles):
     """Quita velas vacías, erróneas o incompletas, duplicados, y ordena por fecha."""
     # Fecha de hoy en formato "AAAA-MM-DD". Como las fechas tienen ese formato,
@@ -287,7 +314,7 @@ def clean_candles(candles):
         candle["l"] = min(prices)
         # Redondear para que los archivos no sean enormes
         for key in ("o", "h", "l", "c"):
-            candle[key] = round(candle[key], 6)
+            candle[key] = round_significant(candle[key])
         # Si una fecha aparece dos veces, nos quedamos con la última
         by_date[candle["t"]] = candle
 
@@ -322,6 +349,19 @@ def rebuild_forex_closes(candles):
 # Programa principal
 # ---------------------------------------------------------------------------
 
+def load_previous_candles(path):
+    """Lee las velas de un archivo ya guardado, en el formato que tenga:
+    el compacto ([fecha, o, h, l, c]) o el antiguo ({"t": ..., "o": ...})."""
+    saved = json.loads(path.read_text(encoding="utf-8"))
+    candles = []
+    for candle in saved["candles"]:
+        if isinstance(candle, list):
+            t, o, h, l, c = candle
+            candle = {"t": t, "o": o, "h": h, "l": l, "c": c}
+        candles.append(candle)
+    return candles
+
+
 def main():
     DATA_DIR.mkdir(exist_ok=True)
     index = []
@@ -329,18 +369,27 @@ def main():
     for asset in ASSETS:
         print(f"Descargando {asset['name']} ({asset['symbol']})...")
 
-        # A veces Yahoo falla y no devuelve nada (p. ej. "possibly delisted"
-        # con el Nikkei, que sí existe). Lo reintentamos hasta 3 veces.
+        # A veces Yahoo falla: no devuelve nada (p. ej. "possibly delisted"
+        # con el Nikkei, que sí existe) o tarda tanto que da error de tiempo
+        # de espera. En los dos casos lo reintentamos hasta 3 veces.
         raw = []
         for attempt in range(1, 4):
-            if asset["source"] == "binance":
-                raw = download_binance(asset["symbol"])
-            else:
-                raw = download_yahoo(asset["symbol"])
+            try:
+                if asset["source"] == "binance":
+                    raw = download_binance(asset["symbol"])
+                else:
+                    raw = download_yahoo(asset["symbol"])
+            except Exception as error:  # cualquier fallo de conexión
+                print(f"  Error de conexión: {error}")
+                raw = []
             if raw:
                 break
-            print(f"  Sin datos en el intento {attempt} de 3; reintentando...")
-            time.sleep(5)
+            # Si Yahoo nos frena por hacer muchas peticiones seguidas, esperar
+            # un rato suele bastar: 20 s, luego 40 s
+            if attempt < 3:
+                print(f"  Sin datos en el intento {attempt} de 3; reintentando en {20 * attempt} s...")
+                time.sleep(20 * attempt)
+        time.sleep(1)  # una pausa corta entre activos, para no saturar a Yahoo
 
         # Fecha de inicio opcional, para saltarse datos antiguos erróneos
         if "start" in asset:
@@ -349,6 +398,13 @@ def main():
         candles, removed = clean_candles(raw)
         if asset["market"] == "forex":
             candles = rebuild_forex_closes(candles)
+        path = DATA_DIR / f"{asset['ticker']}.json"
+        if not candles and path.exists():
+            # La descarga falló, pero tenemos los datos de la vez anterior:
+            # mejor seguir con ellos que quitar el activo del juego
+            candles = load_previous_candles(path)
+            print(f"  ¡No se pudo descargar! Se mantienen los datos anteriores "
+                  f"({len(candles)} velas, hasta {candles[-1]['t']}).")
         if not candles:
             print("  ¡No se ha descargado ninguna vela! Se salta este activo.")
             continue
@@ -366,15 +422,19 @@ def main():
             if abs(move) > SUSPICIOUS_DAILY_MOVE:
                 print(f"  AVISO: {move:+.0%} el {candle['t']} (¿error en los datos?)")
 
-        # Guardar el archivo del activo con el formato del CLAUDE.md
+        # Guardar el archivo del activo con el formato del CLAUDE.md.
+        # Formato compacto: cada vela es una lista [fecha, o, h, l, c] en vez
+        # de {"t": ..., "o": ..., ...}, para no repetir los nombres miles de
+        # veces (el archivo pesa casi la mitad). "columns" dice qué es cada
+        # posición; data.js lo convierte de vuelta al cargarlo.
         output = {
             "ticker": asset["ticker"],
             "name": asset["name"],
             "market": asset["market"],
             "interval": "1d",
-            "candles": candles,
+            "columns": ["t", "o", "h", "l", "c"],
+            "candles": [[c["t"], c["o"], c["h"], c["l"], c["c"]] for c in candles],
         }
-        path = DATA_DIR / f"{asset['ticker']}.json"
         # separators sin espacios = archivo más pequeño
         path.write_text(json.dumps(output, ensure_ascii=False, separators=(",", ":")),
                         encoding="utf-8")

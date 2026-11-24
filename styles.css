@@ -345,15 +345,19 @@ button.icon-button:hover {
   font-size: 0.95rem;
 }
 
-.howto summary {
-  cursor: pointer;
+/* Botón con aspecto de enlace, en el color de acento ("¿Cómo se juega?") */
+button.link-accent {
+  padding: 0;
+  background: none;
   color: var(--accent);
+  font-weight: normal;
   font-style: italic;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
-.howto ol {
-  margin: 8px 0;
-  padding-left: 20px;
+button.link-accent:hover {
+  color: var(--accent-hover);
 }
 
 /* =========================================================================
@@ -613,6 +617,65 @@ button.chip .logo-small {
   grid-template-columns: 1fr 280px;
   gap: 16px;
   align-items: start;
+}
+
+/* Contenedor del gráfico: la visita guiada se coloca encima de él */
+.chart-wrap {
+  position: relative;
+  min-width: 0; /* deja que el gráfico encoja dentro de la rejilla */
+}
+
+/* -------------------------------------------------------------------------
+   Visita guiada (js/tour.js)
+   ------------------------------------------------------------------------- */
+
+.tour {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  right: 16px;
+  z-index: 10; /* por encima del gráfico */
+  max-width: 440px;
+  padding: 16px 18px;
+  border: 1px solid var(--gold);
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: 0 12px 32px -12px rgba(0, 0, 0, 0.35);
+  animation: slide-in 0.3s ease-out;
+}
+
+.tour-counter {
+  margin: 0;
+  font-size: 0.9rem;
+  font-style: italic;
+  color: var(--muted);
+}
+
+.tour .tour-title {
+  margin: 2px 0 8px;
+  padding: 0;
+  border: none;
+  font-size: 1.35rem;
+}
+
+.tour-text {
+  margin: 0;
+}
+
+.tour-buttons {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 16px;
+  margin-top: 14px;
+}
+
+/* La parte de la página de la que habla cada paso, con un halo dorado */
+.tour-highlight {
+  outline: 2px solid var(--gold);
+  outline-offset: 4px;
+  border-radius: 10px;
+  transition: outline-color 0.2s;
 }
 
 #chart {
@@ -1154,6 +1217,16 @@ td.position {
 
   .brand {
     font-size: 2.2rem;
+  }
+
+  /* En móvil, la visita guiada va fija abajo de la pantalla, a lo ancho */
+  .tour {
+    position: fixed;
+    top: auto;
+    bottom: 12px;
+    left: 12px;
+    right: 12px;
+    max-width: none;
   }
 
   /* En móvil, el nombre del mercado va encima de sus activos */

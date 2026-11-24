@@ -22,6 +22,12 @@ const LOGOS = {
   DAX: { symbol: "DAX", background: "linear-gradient(#000 0 33%, #dd0000 33% 66%, #ffce00 66%)", color: "#fff" },
   IBEX: { symbol: "35", background: "linear-gradient(#aa151b 0 25%, #f1bf00 25% 75%, #aa151b 75%)", color: "#aa151b" },
   N225: { symbol: "225", background: "#bc002d", color: "#fff" },
+  // Bolsas emergentes: las iniciales del país con sus colores
+  BVSP: { symbol: "BR", background: "linear-gradient(135deg, #009c3b 50%, #ffdf00 50%)", color: "#002776" },
+  MXX: { symbol: "MX", background: "linear-gradient(90deg, #006847 33%, #fff 33% 66%, #ce1126 66%)", color: "#1b1b1b" },
+  NIFTY: { symbol: "IN", background: "linear-gradient(#ff9933 0 33%, #fff 33% 66%, #138808 66%)", color: "#000080" },
+  KOSPI: { symbol: "KR", background: "#fff", color: "#cd2e3a" },
+  SSEC: { symbol: "CN", background: "#de2910", color: "#ffde00" },
 
   // Acciones de empresas (emblemas propios, no sus logotipos)
   AAPL: { symbol: "🍎", background: "#1d1d1f", color: "#fff" },

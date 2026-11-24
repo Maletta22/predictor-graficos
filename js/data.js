@@ -3,8 +3,18 @@
 // Reglas del juego (ver CLAUDE.md, apartado 3)
 export const VISIBLE_CANDLES = 60;   // velas que ve el usuario
 // Las velas que se revelan después (10, 20, 30 o 50) las elige el usuario
-const MAX_GAP_DAYS = 7;              // saltos mayores = agujero en los datos
 const MAX_TRIES = 50;                // intentos antes de rendirse
+
+// Temporalidades: cuánto dura cada vela.
+//   maxGapDays: un salto mayor entre dos velas seguidas = agujero en los datos
+//   daysPerCandle: días naturales que "ocupa" cada vela, para estimar si un
+//     activo tiene datos suficientes en unas fechas (ver isAssetAvailable).
+//     En la diaria, las crypto cotizan todos los días y el resto unos 5 de
+//     cada 7 (y algún festivo): les pedimos un 50 % más de días por si acaso.
+export const TIMEFRAMES = {
+  "1d": { name: "Diaria", unit: "velas", maxGapDays: 7, daysPerCandle: { crypto: 1, other: 1.5 } },
+  "1w": { name: "Semanal", unit: "semanas", maxGapDays: 14, daysPerCandle: { crypto: 7, other: 7 } },
+};
 
 // Guardamos lo ya descargado para no pedirlo dos veces al servidor
 let assetList = null;
@@ -51,9 +61,24 @@ export async function loadAssetList() {
 // Velas de un activo concreto (data/<ticker>.json)
 async function loadAsset(file) {
   if (!(file in assetCache)) {
-    assetCache[file] = await loadJson(`data/${file}`);
+    const asset = await loadJson(`data/${file}`);
+    asset.candles = asset.candles.map(unpackCandle);
+    assetCache[file] = asset;
   }
   return assetCache[file];
+}
+
+// En los archivos, cada vela es una lista corta para que pesen menos:
+//   ["2021-03-01", 45000, 49800, 44900, 49600]  (fecha, o, h, l, c)
+// El resto del código usa objetos con nombre, así que la convertimos:
+//   { t: "2021-03-01", o: 45000, h: 49800, l: 44900, c: 49600 }
+// (Si ya viene como objeto, formato antiguo, se deja igual.)
+function unpackCandle(candle) {
+  if (!Array.isArray(candle)) {
+    return candle;
+  }
+  const [t, o, h, l, c] = candle;
+  return { t, o, h, l, c };
 }
 
 // Número entero al azar entre 0 y max-1
@@ -67,14 +92,46 @@ export function daysBetween(dateA, dateB) {
   return Math.round((new Date(dateB) - new Date(dateA)) / MS_PER_DAY);
 }
 
-// ¿Hay algún salto de más de MAX_GAP_DAYS entre dos velas seguidas?
-function hasBigGap(candles) {
+// ¿Hay algún salto de más de "maxGapDays" entre dos velas seguidas?
+function hasBigGap(candles, maxGapDays) {
   for (let i = 1; i < candles.length; i++) {
-    if (daysBetween(candles[i - 1].t, candles[i].t) > MAX_GAP_DAYS) {
+    if (daysBetween(candles[i - 1].t, candles[i].t) > maxGapDays) {
       return true;
     }
   }
   return false;
+}
+
+// Lunes de la semana de una fecha: "2024-03-14" (jueves) → "2024-03-11"
+function mondayOf(isoDate) {
+  const day = new Date(isoDate);
+  const daysSinceMonday = (day.getUTCDay() + 6) % 7; // lunes 0, martes 1... domingo 6
+  day.setUTCDate(day.getUTCDate() - daysSinceMonday);
+  return day.toISOString().slice(0, 10);
+}
+
+// Junta las velas diarias en velas semanales (de lunes a domingo):
+//   apertura = la del primer día de la semana, cierre = la del último,
+//   máximo y mínimo = los extremos de toda la semana.
+// Cada vela semanal lleva la fecha de su primer día con cotización.
+export function toWeekly(dailyCandles) {
+  const weeks = [];
+  let currentMonday = null;
+  for (const candle of dailyCandles) {
+    const monday = mondayOf(candle.t);
+    if (monday !== currentMonday) {
+      // Empieza una semana nueva: copia de la vela del primer día
+      weeks.push({ ...candle });
+      currentMonday = monday;
+    } else {
+      // Misma semana: ampliar máximo y mínimo, y el cierre pasa a ser el de hoy
+      const week = weeks[weeks.length - 1];
+      week.h = Math.max(week.h, candle.h);
+      week.l = Math.min(week.l, candle.l);
+      week.c = candle.c;
+    }
+  }
+  return weeks;
 }
 
 // Convierte los precios para que "base" valga 100.
@@ -117,16 +174,16 @@ export function assetsForChoice(assets, tickers) {
 // ¿Tiene el activo datos suficientes en el rango para una ronda de
 // "totalCandles" velas? Es una estimación rápida con las fechas de
 // data/index.json (sin descargar las velas): mira cuántos días naturales
-// hay en común entre el rango y los datos del activo. Las crypto cotizan
-// todos los días; el resto, unos 5 de cada 7 (y algún festivo), así que les
-// pedimos un 50 % más de días por si acaso.
-export function isAssetAvailable(info, range, totalCandles) {
+// hay en común entre el rango y los datos del activo, y cuántos días
+// "ocupa" cada vela en esa temporalidad (ver TIMEFRAMES).
+export function isAssetAvailable(info, range, totalCandles, timeframe = "1d") {
   const start = info.first > range.from ? info.first : range.from; // la fecha más tardía
   const end = info.last < range.to ? info.last : range.to;         // la más temprana
   if (start > end) {
     return false; // no hay ningún día en común
   }
-  const daysPerCandle = info.market === "crypto" ? 1 : 1.5;
+  const perCandle = TIMEFRAMES[timeframe].daysPerCandle;
+  const daysPerCandle = info.market === "crypto" ? perCandle.crypto : perCandle.other;
   return daysBetween(start, end) >= totalCandles * daysPerCandle;
 }
 
@@ -174,18 +231,19 @@ export function pickWeightedAsset(list, useWeights = true) {
 //   revealCount: cuántas velas se revelarán después (10, 20, 30 o 50)
 //   tickers: qué activos pueden salir ([] = todos, ver assetsForChoice)
 //   range: rango de fechas { from, to } (ver rangeFromYears)
+//   timeframe: "1d" (velas diarias) o "1w" (semanales), ver TIMEFRAMES
 // Devuelve:
 //   visible: las 60 velas que ve el usuario (normalizadas)
 //   hidden:  las "revealCount" velas siguientes, para revelar después
 //   decisionPrice / finalPrice: precios REALES de cierre al decidir y
 //     al final (solo se muestran tras responder)
 //   y los datos del activo (nombre, mercado...), que NO se muestran aún.
-export async function pickRandomRound(revealCount, tickers = [], range = rangeFromYears("", "")) {
+export async function pickRandomRound(revealCount, tickers = [], range = rangeFromYears("", ""), timeframe = "1d") {
   const totalCandles = VISIBLE_CANDLES + revealCount;
   const fullList = await loadAssetList();
   // Solo los activos elegidos que tienen datos en el rango
   const list = assetsForChoice(fullList, tickers).filter((info) =>
-    isAssetAvailable(info, range, totalCandles)
+    isAssetAvailable(info, range, totalCandles, timeframe)
   );
   if (list.length === 0) {
     throw new Error("No hay datos para esa combinación de activo y fechas");
@@ -197,8 +255,10 @@ export async function pickRandomRound(revealCount, tickers = [], range = rangeFr
     const info = pickWeightedAsset(list, tickers.length === 0);
     const asset = await loadAsset(info.file);
 
-    // 2. Las velas que caen dentro del rango de fechas
-    const inRange = asset.candles.filter((c) => c.t >= range.from && c.t <= range.to);
+    // 2. Las velas que caen dentro del rango de fechas (en la semanal, se
+    //    juntan después las diarias de cada semana)
+    const dailyInRange = asset.candles.filter((c) => c.t >= range.from && c.t <= range.to);
+    const inRange = timeframe === "1w" ? toWeekly(dailyInRange) : dailyInRange;
     if (inRange.length < totalCandles) {
       continue; // la estimación falló por poco: probar otro activo
     }
@@ -208,7 +268,7 @@ export async function pickRandomRound(revealCount, tickers = [], range = rangeFr
     const windowCandles = inRange.slice(start, start + totalCandles);
 
     // 4. Si el fragmento tiene un agujero en los datos, probar otro
-    if (hasBigGap(windowCandles)) {
+    if (hasBigGap(windowCandles, TIMEFRAMES[timeframe].maxGapDays)) {
       continue;
     }
 
@@ -221,6 +281,7 @@ export async function pickRandomRound(revealCount, tickers = [], range = rangeFr
       ticker: asset.ticker,
       name: asset.name,
       market: asset.market,
+      timeframe, // "1d" o "1w"
       visible: normalize(visible, base),
       hidden: normalize(hidden, base),
       decisionPrice: base,

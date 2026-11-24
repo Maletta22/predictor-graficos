@@ -7,6 +7,7 @@ export const REVEAL_OPTIONS = [10, 20, 30, 50];
 
 const DEFAULT_SETTINGS = {
   revealCount: 20, // velas que se revelan tras responder
+  timeframe: "1d", // temporalidad: "1d" (velas diarias) o "1w" (semanales)
   tickers: [],     // qué activos salen: [] = todos; si no, la lista elegida,
                    // p. ej. ["AAPL", "EURUSD"]. (Antes era "ticker", con un
                    // solo valor: main.js convierte los ajustes antiguos.)
@@ -23,6 +24,9 @@ export function loadSettings() {
       // Por si se guardó un valor que ya no existe
       if (!REVEAL_OPTIONS.includes(settings.revealCount)) {
         settings.revealCount = DEFAULT_SETTINGS.revealCount;
+      }
+      if (!["1d", "1w"].includes(settings.timeframe)) {
+        settings.timeframe = DEFAULT_SETTINGS.timeframe;
       }
       return settings;
     }

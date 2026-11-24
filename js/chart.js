@@ -30,6 +30,21 @@ let chart = null;
 let series = null;
 let decisionLine = null; // línea horizontal en el precio de la decisión (100)
 
+// Temporalidad del gráfico actual: "1d" (diaria) o "1w" (semanal).
+// Cambia las etiquetas del eje ("Día 5" / "Semana 5") y los huecos.
+let timeframe = "1d";
+
+// main.js la cambia antes de dibujar cada ronda
+export function setTimeframe(newTimeframe) {
+  timeframe = newTimeframe;
+  // La librería guarda las etiquetas del eje ya calculadas: al volver a darle
+  // las funciones que las escriben, las recalcula con la palabra nueva
+  chart.applyOptions({
+    localization: { timeFormatter: (time) => timeToLabel(time) },
+    timeScale: { tickMarkFormatter: (time) => timeToLabel(time) },
+  });
+}
+
 // Lo último que se dibujó, para poder repintarlo si cambia el tema
 let lastCandles = null;
 let lastRevealFrom = 0;
@@ -85,9 +100,11 @@ function dayToTime(day) {
   return day * SECONDS_PER_DAY;
 }
 
-// Y al revés: de "tiempo" a etiqueta visible ("Día 1" es el primer día)
+// Y al revés: de "tiempo" a etiqueta visible ("Día 1" es la primera vela;
+// en la semanal, "Semana 1")
 function timeToLabel(time) {
-  return `Día ${time / SECONDS_PER_DAY + 1}`;
+  const word = timeframe === "1w" ? "Semana" : "Día";
+  return `${word} ${time / SECONDS_PER_DAY + 1}`;
 }
 
 // Crea el gráfico vacío dentro del elemento HTML "container"
@@ -148,7 +165,9 @@ export function toChartData(candles, revealFrom = candles.length) {
   for (let i = 0; i < candles.length; i++) {
     const candle = candles[i];
 
-    if (i > 0) {
+    // Huecos solo en la diaria: en la semanal, la vela de la semana del
+    // cierre ya recoge el salto (y entre dos semanas siempre hay 4 laborables)
+    if (i > 0 && timeframe === "1d") {
       const previous = candles[i - 1];
       const closedDays = countWeekdaysBetween(previous.t, candle.t);
       if (closedDays >= EXCEPTIONAL_CLOSED_WEEKDAYS && !isNewYearClosure(previous.t, candle.t)) {

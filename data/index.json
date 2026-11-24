@@ -81,6 +81,51 @@
     "last": "2026-11-20"
   },
   {
+    "ticker": "BVSP",
+    "name": "Bovespa (Brasil)",
+    "market": "indices",
+    "file": "BVSP.json",
+    "count": 8314,
+    "first": "1993-04-27",
+    "last": "2026-11-23"
+  },
+  {
+    "ticker": "MXX",
+    "name": "IPC (México)",
+    "market": "indices",
+    "file": "MXX.json",
+    "count": 8447,
+    "first": "1993-03-19",
+    "last": "2026-11-23"
+  },
+  {
+    "ticker": "NIFTY",
+    "name": "Nifty 50 (India)",
+    "market": "indices",
+    "file": "NIFTY.json",
+    "count": 4706,
+    "first": "2007-09-17",
+    "last": "2026-11-23"
+  },
+  {
+    "ticker": "KOSPI",
+    "name": "KOSPI (Corea del Sur)",
+    "market": "indices",
+    "file": "KOSPI.json",
+    "count": 7369,
+    "first": "1996-12-11",
+    "last": "2026-11-23"
+  },
+  {
+    "ticker": "SSEC",
+    "name": "Shanghái Compuesto (China)",
+    "market": "indices",
+    "file": "SSEC.json",
+    "count": 7120,
+    "first": "1997-07-02",
+    "last": "2026-11-23"
+  },
+  {
     "ticker": "AAPL",
     "name": "Apple",
     "market": "acciones",
