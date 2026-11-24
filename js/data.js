@@ -130,6 +130,43 @@ export function isAssetAvailable(info, range, totalCandles) {
   return daysBetween(start, end) >= totalCandles * daysPerCandle;
 }
 
+// Probabilidad de que salga cada mercado (en %). Sin esto, cada ACTIVO
+// tendría la misma probabilidad y saldrían sobre todo acciones (hay 16).
+// Si solo entran algunos mercados (por la selección o las fechas), se
+// reparten entre ellos en la misma proporción: p. ej. solo Crypto y
+// Materias primas → 22,5 / (22,5 + 10) ≈ 69 % y 31 %.
+export const MARKET_WEIGHTS = {
+  indices: 22.5,
+  acciones: 22.5,
+  forex: 22.5,
+  crypto: 22.5,
+  materias: 10,
+};
+const DEFAULT_WEIGHT = 22.5; // para un mercado nuevo que no esté en la lista
+
+// Elige un activo de "list": primero un mercado según su peso y después,
+// dentro de ese mercado, un activo cualquiera (todos con la misma probabilidad).
+export function pickWeightedAsset(list) {
+  const markets = [...new Set(list.map((a) => a.market))]; // mercados presentes, sin repetir
+  const weightOf = (market) => MARKET_WEIGHTS[market] ?? DEFAULT_WEIGHT;
+  const total = markets.reduce((sum, market) => sum + weightOf(market), 0);
+
+  // "Ruleta": un número al azar entre 0 y el total; cada mercado ocupa un
+  // tramo tan largo como su peso, y gana aquel en cuyo tramo cae el número.
+  let ticket = Math.random() * total;
+  let chosenMarket = markets[markets.length - 1];
+  for (const market of markets) {
+    ticket -= weightOf(market);
+    if (ticket < 0) {
+      chosenMarket = market;
+      break;
+    }
+  }
+
+  const inMarket = list.filter((a) => a.market === chosenMarket);
+  return inMarket[randomInt(inMarket.length)];
+}
+
 // Elige un activo y un fragmento al azar.
 //   revealCount: cuántas velas se revelarán después (10, 20, 30 o 50)
 //   tickers: qué activos pueden salir ([] = todos, ver assetsForChoice)
@@ -152,8 +189,9 @@ export async function pickRandomRound(revealCount, tickers = [], range = rangeFr
   }
 
   for (let attempt = 0; attempt < MAX_TRIES; attempt++) {
-    // 1. Un activo al azar (todos con la misma probabilidad)
-    const info = list[randomInt(list.length)];
+    // 1. Un activo al azar: primero el mercado (según MARKET_WEIGHTS) y
+    //    luego un activo de ese mercado
+    const info = pickWeightedAsset(list);
     const asset = await loadAsset(info.file);
 
     // 2. Las velas que caen dentro del rango de fechas
